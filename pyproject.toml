@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"] # REQUIRED if [build-system] table is used
+build-backend = "setuptools.build_meta" # If not defined, then legacy behavior can happen.
+
+
+[project]
+name = "enstrag"
+version = "0.0.1"
+description = "A sample Python project"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["rag", "ensta"]
+authors = [
+  { name = "Maxence Leguéry", email = "maxence.leguery@ensta-paris.fr" },
+  { name = "Antoine Domingues", email = "antoine.domingues@ensta-paris.fr" },
+  { name = "Albin Joyeux", email = "albin.joyeux@ensta-paris.fr" },
+  { name = "Mattéo Denis", email = "matteo.denis@ensta-paris.fr" },
+  { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
+]
