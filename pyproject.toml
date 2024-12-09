@@ -17,3 +17,4 @@ authors = [
   { name = "Mattéo Denis", email = "matteo.denis@ensta-paris.fr" },
   { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
 ]
+dependencies = ["langchain", "langchain-community", "langchain-huggingface", "chromadb", "typing", "transformers", "accelerate", "unstructured[all-docs]"]
