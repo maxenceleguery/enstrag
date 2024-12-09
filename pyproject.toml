@@ -8,7 +8,7 @@ name = "enstrag"
 version = "0.0.1"
 description = "A sample Python project"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 keywords = ["rag", "ensta"]
 authors = [
   { name = "Maxence Leguéry", email = "maxence.leguery@ensta-paris.fr" },
@@ -17,4 +17,4 @@ authors = [
   { name = "Mattéo Denis", email = "matteo.denis@ensta-paris.fr" },
   { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
 ]
-dependencies = ["langchain", "langchain-community", "langchain-huggingface", "chromadb", "typing", "transformers", "accelerate", "unstructured[all-docs]"]
+dependencies = ["langchain", "langchain-community", "langchain-huggingface", "chromadb", "typing", "torch", "transformers", "accelerate", "unstructured[all-docs]"]
