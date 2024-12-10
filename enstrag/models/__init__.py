@@ -14,9 +14,16 @@ Qwen/Qwen2.5-1.5B-Instruct
 
 """
 
+def get_available_models():
+    available = []
+    for folder in os.listdir(MODELS_PATH):
+        if os.path.exists(os.path.join(MODELS_PATH, folder, "config.json")):
+            available.append(folder)
+    return available
+
 class RagEmbeddings(Embeddings):
         def __init__(self, model_name):
-            if model_name not in os.listdir(MODELS_PATH):
+            if model_name not in get_available_models():
                 raise ValueError(f"{model_name} is not a valid model. Choose one from /home/ensta/data or ask to add one.")
 
             self.model = SentenceTransformer(model_name, trust_remote_code=True)
@@ -28,7 +35,7 @@ class RagEmbeddings(Embeddings):
             return self.model.encode([query])[0].tolist()
 
 def get_pipeline(model_name: str):
-    if model_name not in os.listdir(MODELS_PATH):
+    if model_name not in get_available_models():
         raise ValueError(f"{model_name} is not a valid model. Choose one from /home/ensta/data or ask to add one.")
     
     return pipeline(
