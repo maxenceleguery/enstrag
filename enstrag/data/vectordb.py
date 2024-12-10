@@ -3,7 +3,7 @@ from langchain.docstore.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, SentenceTransformersTokenTextSplitter
 from ..models import RagEmbeddings
 
-from typing import Literal
+from typing import Literal, List
 
 class VectorDB:
     def __init__(self, embeddings: RagEmbeddings, persist_directory: str = None):
@@ -26,9 +26,13 @@ class VectorDB:
         )
         self.db.persist()
 
-    def add_documents(self, documents: Document) -> None:
-        splits = self.text_splitter.split_documents(documents)
+    def add_document(self, document: Document) -> None:
+        splits = self.text_splitter.split_documents(document)
         self.db.add_documents(splits)
+
+    def add_documents(self, documents: List[Document]) -> None:
+        for doc in documents:
+            self.add_document(doc)
 
     def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
         return "\n".join(
