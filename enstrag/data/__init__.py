@@ -1,4 +1,4 @@
 from .parser import Parser
-from .vectordb import get_retriever
+from .vectordb import VectorDB
 
-__all__ = ["Parser", "get_retriever"]
+__all__ = ["Parser", "VectorDB"]
