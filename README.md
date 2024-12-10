@@ -7,5 +7,5 @@ python3 -m pip install .
 ```
 
 ```bash
-python3 src
+python3 -m enstrag
 ```

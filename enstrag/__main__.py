@@ -2,6 +2,9 @@ from .rag import RagAgent
 from .models import get_pipeline, RagEmbeddings
 from .data import get_retriever, get_documents_from_file
 
+print("Main not ready yet")
+exit(0)
+
 agent = RagAgent(
     pipe=get_pipeline(),
     retriever=get_retriever(get_documents_from_file(), RagEmbeddings()),
