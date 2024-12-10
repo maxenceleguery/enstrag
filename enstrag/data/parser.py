@@ -63,3 +63,10 @@ class Parser:
         docs = Parser.get_documents_from_pdf('/tmp/enstrag/tmp.pdf')
         os.remove('/tmp/enstrag/tmp.pdf')
         return docs
+
+    @staticmethod
+    def get_documents_from_pdf_urls(urls: List[str]) -> List[Document]:
+        docs = []
+        for url in urls:
+            docs.extend(Parser.get_documents_from_pdf_url(url))
+        return docs
