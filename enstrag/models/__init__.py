@@ -21,7 +21,7 @@ def get_available_models():
             available.append(folder)
     return available
 
-class RagEmbeddings(Embeddings):
+class RagEmbedding(Embeddings):
         def __init__(self, model_name):
             if model_name not in get_available_models():
                 raise ValueError(f"{model_name} is not a valid model. Choose one from /home/ensta/data or ask to add one.")

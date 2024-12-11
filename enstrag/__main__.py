@@ -1,11 +1,16 @@
+print("Importing packages...")
 from .rag import RagAgent
-from .models import get_pipeline, RagEmbeddings
+from .models import get_pipeline, RagEmbedding
 from .data import VectorDB, Parser
 
 print("Main not ready yet")
 exit(0)
 
-db = VectorDB(RagEmbeddings(), persist_directory="/tmp/enstrag")
+llm_folder = ""
+embedding_folder = ""
+persist_directory="/tmp/enstrag"
+
+db = VectorDB(RagEmbedding(embedding_folder), persist_directory=persist_directory)
 db.add_documents(
     Parser.get_documents_from_pdf_url([
         "https://arxiv.org/pdf/1706.03762",
@@ -14,11 +19,8 @@ db.add_documents(
 )
 
 agent = RagAgent(
-    pipe=get_pipeline(),
-    db=VectorDB(
-        
-        RagEmbeddings()
-    ),
+    pipe=get_pipeline(llm_folder),
+    db=db,
 )
 
 while True:

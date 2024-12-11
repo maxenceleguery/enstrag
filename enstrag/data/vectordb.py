@@ -1,12 +1,12 @@
 from langchain_community.vectorstores import Chroma
 from langchain.docstore.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, SentenceTransformersTokenTextSplitter
-from ..models import RagEmbeddings
+from ..models import RagEmbedding
 
 from typing import Literal, List
 
 class VectorDB:
-    def __init__(self, embeddings: RagEmbeddings, persist_directory: str = None):
+    def __init__(self, embedding: RagEmbedding, persist_directory: str = None):
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=512,
             chunk_overlap=100
@@ -21,7 +21,7 @@ class VectorDB:
         """
 
         self.db = Chroma(
-            embedding_function=embeddings,
+            embedding_function=embedding,
             persist_directory=persist_directory,
         )
         self.db.persist()
