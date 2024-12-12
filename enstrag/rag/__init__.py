@@ -22,8 +22,19 @@ class RagAgent:
         self.llm_chain = LLMChain(prompt=prompt, llm=HuggingFacePipeline(pipeline=pipe))
         self.db = db
 
+    def _pre_retrieval(self, query: str):
+        return query
+    
+    def _post_retrieval(self, retrieved_context: str):
+        return retrieved_context
+
     def answer_question(self, query: str, verbose: bool = False) -> str:
+        query = self._pre_retrieval(query)
+
         retrieved_context = self.db.get_context_from_query(query)
+
+        retrieved_context = self._post_retrieval(retrieved_context)
+        
         if verbose:
             print(f"\nContext : {retrieved_context}")
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
