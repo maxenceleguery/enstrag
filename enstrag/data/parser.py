@@ -6,6 +6,7 @@ import os
 import re
 from langchain.docstore.document import Document
 from typing import List
+from hashlib import sha256
 
 class Parser:
     def __init__(self):
@@ -33,7 +34,7 @@ class Parser:
                 texts.append(str(elem))
 
         text = " ".join(texts)
-        return [Document(page_content=text)]
+        return [Document(page_content=text, metadatas=[{"hash": sha256(text.encode('utf-8')).hexdigest()}])]
 
     @staticmethod
     def get_documents_from_pdf(filename: str) -> List[Document]:
@@ -51,7 +52,7 @@ class Parser:
                 texts.append(cleaned_text+"\n\n")
 
         text = " ".join(texts)
-        return [Document(page_content=text)]
+        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest()})]
 
     @staticmethod
     def get_documents_from_pdf_url(url: str) -> List[Document]:

@@ -7,13 +7,6 @@ from langchain_core.embeddings import Embeddings
 
 MODELS_PATH = "/home/ensta/data/"
 
-"""
-TO ADD :
-sentence-transformers/all-MiniLM-l6-v2
-Qwen/Qwen2.5-1.5B-Instruct
-
-"""
-
 def get_available_models():
     available = []
     for folder in os.listdir(MODELS_PATH):
@@ -39,6 +32,7 @@ def get_pipeline(model_name: str):
         raise ValueError(f"{model_name} is not a valid model. Choose one from /home/ensta/data or ask to add one.")
     
     return pipeline(
+        task="text-generation",
         model=os.path.join(MODELS_PATH, model_name),
         device=0,
         max_length=1024,

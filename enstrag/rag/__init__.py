@@ -1,25 +1,24 @@
 from langchain.prompts import ChatPromptTemplate
-from langchain.chains.llm import LLMChain
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
 from ..data import VectorDB
 
 class RagAgent:
-    def __init__(self, pipe: Pipeline, db: VectorDB):
-        template = """
-        You are an assistant for question-answering tasks. Use the following pieces of retrieved context and your knowledge to answer the question without just repeating the context. If you don't know the answer, just say that you don't know.
-
-        <context>
-        The main subject is about Large Language models.
-        {context}
-        </context>
-
-        Answer the following question:
-
-        {question}<ENDofprompt>"""
+    def __init__(self, pipe: Pipeline, db: VectorDB, main_subject: str = "Large Language models."):
+        template = (
+        "You are an assistant for question-answering tasks. "
+        "Use the following pieces of retrieved context and your knowledge to directly answer the question without just repeating the context. "
+        "If you don't know the answer, just say simply say 'Sorry, I don't know'.\n"
+        "<context>\n"
+        "{context}\n"
+        "</context>\n"
+        f"Main subject : {main_subject}\n"
+        "Answer the following question:\n"
+        "{question}\n<ENDofprompt>"
+        )
         prompt = ChatPromptTemplate.from_template(template)
 
-        self.llm_chain = LLMChain(prompt=prompt, llm=HuggingFacePipeline(pipeline=pipe))
+        self.llm_chain = prompt | HuggingFacePipeline(pipeline=pipe)
         self.db = db
 
     def _pre_retrieval(self, query: str):
@@ -36,10 +35,10 @@ class RagAgent:
         retrieved_context = self._post_retrieval(retrieved_context)
         
         if verbose:
-            print(f"\nContext : {retrieved_context}")
+            print(f"\nContext :\n{retrieved_context}\n")
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
-        result = op["text"].split("<ENDofprompt>")[-1]
+        result = op.split("<ENDofprompt>")[-1].strip()
         if verbose:
-            print(f"\nOp : {op}")
+            #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
         return result, retrieved_context
