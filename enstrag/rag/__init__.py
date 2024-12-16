@@ -8,6 +8,7 @@ class RagAgent:
         template = (
         "You are an assistant for question-answering tasks. "
         "Use the following pieces of retrieved context and your knowledge to directly answer the question without just repeating the context. "
+        "If you need Latex for writing equation, use Markdown. Gradio supports rendering Markdown, which includes LaTeX equations when enclosed in double dollar signs ($$ for block equations) or single dollar signs ($ for inline equations). "
         "If you don't know the answer, just say simply say 'Sorry, I don't know'.\n"
         "<context>\n"
         "{context}\n"

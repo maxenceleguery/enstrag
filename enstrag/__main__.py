@@ -4,6 +4,7 @@ from .models import get_pipeline, RagEmbedding
 from .data import VectorDB, Parser
 
 import argparse
+import gradio as gr
 
 parser = argparse.ArgumentParser(prog='Enstrag')
 
@@ -22,8 +23,9 @@ if args.reset:
 
 db.add_documents(
     Parser.get_documents_from_pdf_urls([
-        "https://arxiv.org/pdf/1706.03762",
-        "https://arxiv.org/pdf/2106.09685"
+        "http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf",
+        #"https://arxiv.org/pdf/1706.03762",
+        #"https://arxiv.org/pdf/2106.09685"
     ])
 )
 
@@ -32,8 +34,17 @@ agent = RagAgent(
     db=db,
 )
 
+def ask(query, history):
+    result, retrieved_context = agent.answer_question(query, verbose=True)
+    return result
+
+demo = gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")
+demo.launch(share=True)
+
+"""
 while True:
     query = input("Enter the question (Type exit to close)\n>>>")
     if query == "exit":
         break
     result, retrieved_context = agent.answer_question(query, verbose=True)
+"""
