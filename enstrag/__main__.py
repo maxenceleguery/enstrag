@@ -49,6 +49,7 @@ agent = RagAgent(
     db=db,
 )
 
+
 def ask(query, history):
     result, retrieved_context = agent.answer_question(query, verbose=True)
     return result

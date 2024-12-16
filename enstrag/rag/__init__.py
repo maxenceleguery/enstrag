@@ -19,14 +19,19 @@ class RagAgent:
         )
         prompt = ChatPromptTemplate.from_template(template)
 
-        self.llm_chain = prompt | HuggingFacePipeline(pipeline=pipe)
+        self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
+        self.llm_chain = prompt | self.hf_pipeline
         self.db = db
 
     def _pre_retrieval(self, query: str):
         return query
-    
+
     def _post_retrieval(self, retrieved_context: str):
         return retrieved_context
+
+    def prompt_llm(self, prompt: str) -> str:
+        """Prompt the LLM with a formatted prompt"""
+        return self.hf_pipeline(prompt)
 
     def answer_question(self, query: str, verbose: bool = False) -> str:
         query = self._pre_retrieval(query)
@@ -34,7 +39,7 @@ class RagAgent:
         retrieved_context, sources = self.db.get_context_from_query(query)
 
         retrieved_context = self._post_retrieval(retrieved_context)
-        
+
         if verbose:
             print(f"\nContext from {sources} :\n{retrieved_context}\n")
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
