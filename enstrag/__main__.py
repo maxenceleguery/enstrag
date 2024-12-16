@@ -1,3 +1,15 @@
+print("Importing packages...")
+from .rag import RagAgent
+from .models import get_pipeline, RagEmbedding
+from .data import VectorDB, Parser
+
+# Explainable RAG
+from .explanation.pipeline import XRAGPipeline
+from .explanation.perturber import LeaveOneOutPerturber
+from .explanation.generate import SimpleGenerator
+from .explanation.compare import EmbeddingComparator
+
+from transformers import AutoTokenizer, AutoConfig
 import argparse
 parser = argparse.ArgumentParser(prog='Enstrag')
 
@@ -24,7 +36,8 @@ llm_folder = "Qwen2.5-1.5B-Instruct"
 embedding_folder = "all-MiniLM-L6-v2"
 persist_directory = "/home/ensta/ensta-leguery/enstrag_folder"
 
-db = VectorDB(RagEmbedding(embedding_folder), persist_directory=persist_directory)
+embedding = RagEmbedding(embedding_folder)
+db = VectorDB(embedding, persist_directory=persist_directory)
 
 if args.reset:
     print("Resetting database...")
@@ -48,7 +61,15 @@ agent = RagAgent(
     pipe=get_pipeline(llm_folder),
     db=db,
 )
+# Explainable RAG
+tokenizer = AutoTokenizer.from_pretrained(llm_folder)
+config = AutoConfig.from_pretrained(llm_folder)
 
+perturber = LeaveOneOutPerturber
+generator = SimpleGenerator
+comparator = EmbeddingComparator
+
+pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
 def ask(query, history):
     result, retrieved_context = agent.answer_question(query, verbose=True)
