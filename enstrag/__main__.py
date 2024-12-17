@@ -65,9 +65,9 @@ agent = RagAgent(
 tokenizer = AutoTokenizer.from_pretrained(llm_folder)
 config = AutoConfig.from_pretrained(llm_folder)
 
-perturber = LeaveOneOutPerturber
-generator = SimpleGenerator
-comparator = EmbeddingComparator
+perturber = LeaveOneOutPerturber()
+generator = SimpleGenerator()
+comparator = EmbeddingComparator()
 
 pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
