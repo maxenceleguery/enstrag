@@ -3,9 +3,23 @@ from langchain.docstore.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, SentenceTransformersTokenTextSplitter
 from ..models import RagEmbedding
 
+from abc import ABC, abstractmethod
 from typing import Literal, List
 
-class VectorDB:
+class DB(ABC):
+    @abstractmethod
+    def add_document(self, document: Document) -> None:
+        pass
+
+    @abstractmethod
+    def add_documents(self, documents: List[Document]) -> None:
+        pass
+
+    @abstractmethod
+    def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+        pass
+
+class VectorDB(DB):
     def __init__(self, embedding: RagEmbedding, persist_directory: str = None):
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=512,
@@ -53,3 +67,4 @@ class VectorDB:
                 search_kwargs=search_kwargs,
             ).invoke(query)
         )
+

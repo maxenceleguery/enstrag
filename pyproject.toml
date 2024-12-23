@@ -18,4 +18,4 @@ authors = [
   { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
 ]
 dependencies = ["langchain", "langchain-community", "langchain-huggingface", "langchain-chroma", "typing", "torch", "transformers", "accelerate", "unstructured[all-docs]", "PyPDF2", "gradio",
-"faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3"]
+"faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3", "openai"]

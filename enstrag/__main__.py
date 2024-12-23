@@ -1,7 +1,7 @@
 print("Importing packages...")
 from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
-from .data import VectorDB, Parser
+from .data import VectorDB, Parser, RAPTORVectorDB
 
 import argparse
 import gradio as gr
@@ -14,6 +14,19 @@ args = parser.parse_args()
 llm_folder = "Qwen2.5-1.5B-Instruct"
 embedding_folder = "all-MiniLM-L6-v2"
 persist_directory="/tmp/enstrag"
+
+db = RAPTORVectorDB()
+db.add_documents(
+    Parser.get_documents_from_pdf_urls([
+        "http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf",
+        #"https://arxiv.org/pdf/1706.03762",
+        #"https://arxiv.org/pdf/2106.09685"
+    ])
+)
+
+print(db.get_context_from_query("What is a guassian distribution"))
+
+exit(0)
 
 db = VectorDB(RagEmbedding(embedding_folder), persist_directory=persist_directory)
 
