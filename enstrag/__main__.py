@@ -1,7 +1,7 @@
 print("Importing packages...")
 from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
-from .data import VectorDB, Parser, RAPTORVectorDB
+from .data import VectorDB, Parser#, RAPTORVectorDB
 
 import argparse
 import gradio as gr
@@ -15,6 +15,7 @@ llm_folder = "Qwen2.5-1.5B-Instruct"
 embedding_folder = "all-MiniLM-L6-v2"
 persist_directory="/tmp/enstrag"
 
+"""
 db = RAPTORVectorDB()
 db.add_documents(
     Parser.get_documents_from_pdf_urls([
@@ -27,6 +28,7 @@ db.add_documents(
 print(db.get_context_from_query("What is a guassian distribution"))
 
 exit(0)
+"""
 
 db = VectorDB(RagEmbedding(embedding_folder), persist_directory=persist_directory)
 
@@ -37,6 +39,12 @@ if args.reset:
 db.add_documents(
     Parser.get_documents_from_pdf_urls([
         "http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf",
+        "https://www.maths.lu.se/fileadmin/maths/personal_staff/Andreas_Jakobsson/StoicaM05.pdf",
+        "https://www.math.toronto.edu/khesin/biblio/GoldsteinPooleSafkoClassicalMechanics.pdf",
+        "https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf",
+        "https://www.damtp.cam.ac.uk/user/tong/qft/qft.pdf",
+        "http://students.aiu.edu/submissions/profiles/resources/onlineBook/Z6W3H3_basic%20algebra%20geometry.pdf",
+        "https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf",
         #"https://arxiv.org/pdf/1706.03762",
         #"https://arxiv.org/pdf/2106.09685"
     ])

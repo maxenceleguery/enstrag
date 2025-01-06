@@ -45,8 +45,10 @@ class VectorDB(DB):
         if len(self.db.get(
             where={"hash": doc_hash}
         )["documents"]) > 0:
-            print("Document already in database. Ignoring...")
+            print(f"{document.metadata['name']} already in database. Ignoring...")
             return
+        
+        print(f"Adding {document.metadata['name']} in database...")
         
         splits = self.text_splitter.split_documents([document])
         self.db.add_documents(splits)
