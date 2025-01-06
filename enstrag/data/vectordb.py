@@ -57,16 +57,21 @@ class VectorDB(DB):
         for doc in documents:
             self.add_document(doc)
 
-    def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+    def get_context_from_query(self, query: str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
         if search_type == "mmr":
             search_kwargs={'k': topk, 'fetch_k': fetch_k}
         else:
             search_kwargs={'k': topk}
 
+        contexts = self.db.as_retriever(
+            search_type=search_type,
+            search_kwargs=search_kwargs,
+        ).invoke(query)
+        assert len(contexts) == topk, f"{len(contexts)} != {topk}"
+
+        sources = set(ctx.metadata.get("name") for ctx in contexts)
+
         return "\n".join(
-            ctx.page_content for ctx in self.db.as_retriever(
-                search_type=search_type,
-                search_kwargs=search_kwargs,
-            ).invoke(query)
-        )
+            ctx.page_content for ctx in contexts
+        ), sources
 
