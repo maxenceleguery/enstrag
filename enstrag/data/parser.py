@@ -34,7 +34,7 @@ class Parser:
                 texts.append(str(elem))
 
         text = " ".join(texts)
-        return [Document(page_content=text, metadatas=[{"hash": sha256(text.encode('utf-8')).hexdigest()}])]
+        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filename})]
 
     @staticmethod
     def get_documents_from_pdf(filename: str) -> List[Document]:
@@ -52,11 +52,13 @@ class Parser:
                 texts.append(cleaned_text+"\n\n")
 
         text = " ".join(texts)
-        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest()})]
+        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filename})]
 
     @staticmethod
     def get_documents_from_pdf_url(url: str) -> List[Document]:
-        os.makedirs("/tmp/enstrag", exist_ok=True)
+        if not os.path.exists("/tmp/enstrag"):
+            os.makedirs("/tmp/enstrag", exist_ok=True)
+            os.chmod("/tmp/enstrag", 666)
         with open('/tmp/enstrag/tmp.pdf', 'wb') as f:
             response = requests.get(url)
             f.write(response.content)
