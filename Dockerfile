@@ -6,7 +6,7 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 WORKDIR /app/
 
 RUN apt-get -y update \
-    && apt-get install -y --no-install-recommends wget libgl1 \
+    && apt-get install -y --no-install-recommends wget libgl1 libglib2.0-0 \
     && apt-get -y autoremove && apt-get -y clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /app/* \
