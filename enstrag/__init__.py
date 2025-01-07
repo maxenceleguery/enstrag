@@ -1,13 +1,16 @@
-import socket
+__version__ = "0.0.2"
 
-class ExecutionOnFrontal(Exception):
-    pass
+def verify_execution() -> None:
+    import socket
 
-hostname = socket.gethostname().split(".")[0]
+    class ExecutionOnFrontal(Exception):
+        pass
 
-if hostname.startswith("mesogip"):
-    raise ExecutionOnFrontal("Please don't run code on the frontal. Use srun to start an instance.")
-elif hostname.startswith("ensta"):
-    print(f"Starting RAG on {hostname}")
-else:
-    print(f"Starting RAG on unknown {hostname}")
+    hostname = socket.gethostname().split(".")[0]
+
+    if hostname.startswith("mesogip"):
+        raise ExecutionOnFrontal("Please don't run code on the frontal. Use srun to start an instance.")
+    elif hostname.startswith("ensta"):
+        print(f"Starting RAG on {hostname}")
+    else:
+        print(f"Starting RAG on unknown {hostname}")

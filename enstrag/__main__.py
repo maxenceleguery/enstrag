@@ -1,11 +1,4 @@
-print("Importing packages...")
-from .rag import RagAgent
-from .models import get_pipeline, RagEmbedding
-from .data import VectorDB, Parser, FileDocument#, RAPTORVectorDB
-
 import argparse
-import gradio as gr
-
 parser = argparse.ArgumentParser(prog='Enstrag')
 
 parser.add_argument('-r', '--reset', action='store_true', help="Reset the vector database on start.")
@@ -13,8 +6,19 @@ parser.add_argument('-v', '--version', action='store_true', help="Show version")
 args = parser.parse_args()
 
 if args.version:
-    print("0.0.1")
+    from . import __version__
+    print(__version__)
     exit(0)
+
+from . import verify_execution
+verify_execution()
+
+print("Importing packages...")
+from .rag import RagAgent
+from .models import get_pipeline, RagEmbedding
+from .data import VectorDB, Parser, FileDocument#, RAPTORVectorDB
+
+import gradio as gr
 
 llm_folder = "Qwen2.5-1.5B-Instruct"
 embedding_folder = "all-MiniLM-L6-v2"
