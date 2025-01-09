@@ -1,14 +1,14 @@
 """Defined the comparator of the explained pipeline"""
 from abc import abstractmethod
-from typing import Callable
+from typing import Callable, List
 from ..models import RagEmbedding
 from .utils import cosine_similarity
 
 
-class Comparator():
+class Comparator:
     @abstractmethod
-    def compare(self, perturbed_answers: list[str], gold_answer: str,
-                embedding: RagEmbedding, similarity: Callable = cosine_similarity) -> list[float]:
+    def compare(self, perturbed_answers: List[str], gold_answer: str,
+                embedding: RagEmbedding, similarity: Callable = cosine_similarity) -> List[float]:
         ...
 
 

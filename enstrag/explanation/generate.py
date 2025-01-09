@@ -1,11 +1,12 @@
 """Defined the generator of the explained pipeline"""
 from abc import abstractmethod
 from ..rag import RagAgent
+from typing import List
 
 
-class Generator():
+class Generator:
     @abstractmethod
-    def generator(self, perturbations: list[str], agent: RagAgent) -> list[str]:
+    def generator(self, perturbations: List[str], agent: RagAgent) -> List[str]:
         ...
 
 

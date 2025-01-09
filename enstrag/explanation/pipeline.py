@@ -6,9 +6,10 @@ from .perturber import Perturber
 from .generate import Generator
 from .compare import Comparator
 from ..rag import RagAgent
+from typing import List, Dict, Any
 
 
-class XRAGPipeline():
+class XRAGPipeline:
     """A class to define the Explainable RAG Pipeline"""
 
     def __init__(self, perturber: Perturber, generator: Generator, comparator: Comparator,
@@ -20,7 +21,7 @@ class XRAGPipeline():
         self.agent = agent
         self.embedding = embedding
 
-    def top_k_tokens(self, prompt: dict[str], gold_answer: str, k: int) -> list[str]:
+    def top_k_tokens(self, prompt: Dict[str, Any], gold_answer: str, k: int) -> List[str]:
         """Return the top k tokens that are the most influencial"""
         perturbed_prompts = self.perturber.perturb(prompt, self.tokenizer)
         perturbed_answers = self.generator.generator(perturbed_prompts, self.agent)

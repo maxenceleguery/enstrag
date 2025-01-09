@@ -2,11 +2,12 @@
 from copy import deepcopy
 from abc import abstractmethod
 from transformers import AutoTokenizer
+from typing import List, Dict, Any
 
 
-class Perturber():
+class Perturber:
     @abstractmethod
-    def perturb(self, prompt: dict[str], tokenizer: AutoTokenizer) -> list[str]:
+    def perturb(self, prompt: Dict[str, Any], tokenizer: AutoTokenizer) -> List[str]:
         ...
 
 
