@@ -19,7 +19,7 @@ class RagEmbedding(Embeddings):
             if model_name not in get_available_models():
                 raise ValueError(f"{model_name} is not a valid model. Choose one from /home/ensta/data or ask to add one.")
 
-            self.model = SentenceTransformer(model_name, trust_remote_code=True)
+            self.model = SentenceTransformer(os.path.join(MODELS_PATH, model_name), trust_remote_code=True)
 
         def embed_documents(self, texts: List[str]) -> List[List[float]]:
             return [self.model.encode(t).tolist() for t in texts]

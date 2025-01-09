@@ -5,11 +5,12 @@ build-backend = "setuptools.build_meta" # If not defined, then legacy behavior c
 
 [project]
 name = "enstrag"
-version = "0.0.1"
+dynamic = ["version"]
 description = "A sample Python project"
 readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["rag", "ensta"]
+
 authors = [
   { name = "Maxence Leguéry", email = "maxence.leguery@ensta-paris.fr" },
   { name = "Antoine Domingues", email = "antoine.domingues@ensta-paris.fr" },
@@ -17,4 +18,9 @@ authors = [
   { name = "Mattéo Denis", email = "matteo.denis@ensta-paris.fr" },
   { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
 ]
-dependencies = ["langchain", "langchain-community", "langchain-huggingface", "langchain-chroma", "typing", "torch", "transformers", "accelerate", "unstructured[all-docs]", "PyPDF2", "gradio"]
+
+dependencies = ["langchain", "langchain-community", "langchain-huggingface", "langchain-chroma", "typing", "torch", "transformers", "accelerate", "unstructured[all-docs]", "PyPDF2", "gradio",
+"faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3", "openai"]
+
+[tool.setuptools.dynamic]
+version = { attr = "enstrag.__version__" }

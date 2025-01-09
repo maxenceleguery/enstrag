@@ -3,9 +3,23 @@ from langchain.docstore.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, SentenceTransformersTokenTextSplitter
 from ..models import RagEmbedding
 
+from abc import ABC, abstractmethod
 from typing import Literal, List
 
-class VectorDB:
+class DB(ABC):
+    @abstractmethod
+    def add_document(self, document: Document) -> None:
+        pass
+
+    @abstractmethod
+    def add_documents(self, documents: List[Document]) -> None:
+        pass
+
+    @abstractmethod
+    def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+        pass
+
+class VectorDB(DB):
     def __init__(self, embedding: RagEmbedding, persist_directory: str = None):
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=512,
@@ -31,8 +45,10 @@ class VectorDB:
         if len(self.db.get(
             where={"hash": doc_hash}
         )["documents"]) > 0:
-            print("Document already in database. Ignoring...")
+            print(f"{document.metadata['name']} already in database. Ignoring...")
             return
+        
+        print(f"Adding {document.metadata['name']} in database...")
         
         splits = self.text_splitter.split_documents([document])
         self.db.add_documents(splits)
@@ -41,15 +57,21 @@ class VectorDB:
         for doc in documents:
             self.add_document(doc)
 
-    def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+    def get_context_from_query(self, query: str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
         if search_type == "mmr":
             search_kwargs={'k': topk, 'fetch_k': fetch_k}
         else:
             search_kwargs={'k': topk}
 
+        contexts = self.db.as_retriever(
+            search_type=search_type,
+            search_kwargs=search_kwargs,
+        ).invoke(query)
+        assert len(contexts) == topk, f"{len(contexts)} != {topk}"
+
+        sources = set(ctx.metadata.get("name") for ctx in contexts)
+
         return "\n".join(
-            ctx.page_content for ctx in self.db.as_retriever(
-                search_type=search_type,
-                search_kwargs=search_kwargs,
-            ).invoke(query)
-        )
+            ctx.page_content for ctx in contexts
+        ), sources
+
