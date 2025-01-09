@@ -15,6 +15,10 @@ parser = argparse.ArgumentParser(prog='Enstrag')
 
 parser.add_argument('-r', '--reset', action='store_true', help="Reset the vector database on start.")
 parser.add_argument('-v', '--version', action='store_true', help="Show version")
+parser.add_argument('--persist_dir', type=str, default="/home/ensta/ensta-leguery/enstrag_folder")
+parser.add_argument('--models_path', type=str, default="/home/ensta/data")
+parser.add_argument('--llm_folder', type=str, default="Qwen2.5-1.5B-Instruct")
+parser.add_argument('--embedding_folder', type=str, default="all-MiniLM-L6-v2")
 args = parser.parse_args()
 
 if args.version:
@@ -25,6 +29,9 @@ if args.version:
 from . import verify_execution
 verify_execution()
 
+import os
+os.environ["MODELS_PATH"] = args.models_path
+
 print("Importing packages...")
 from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
@@ -32,9 +39,9 @@ from .data import VectorDB, Parser, FileDocument
 
 import gradio as gr
 
-llm_folder = "Qwen2.5-1.5B-Instruct"
-embedding_folder = "all-MiniLM-L6-v2"
-persist_directory = "/home/ensta/ensta-leguery/enstrag_folder"
+llm_folder = args.llm_folder
+embedding_folder = args.embedding_folder
+persist_directory = args.persist_dir
 
 embedding = RagEmbedding(embedding_folder)
 db = VectorDB(embedding, persist_directory=persist_directory)

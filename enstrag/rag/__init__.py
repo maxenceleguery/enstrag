@@ -56,7 +56,7 @@ class RagAgent:
         if "\[" in result and "\]" in result:
             result = result.replace("\[", "$$").replace("\]", "$$")
 
-        result = result + f"\n\nSources : {' '.join(src for src in sources)}"
+        result = result + f"\n\nSources : {', '.join(list(sources))}"
         if verbose:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")

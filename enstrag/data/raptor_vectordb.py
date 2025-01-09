@@ -2,7 +2,7 @@ from .raptor.cluster_tree_builder import ClusterTreeBuilder, ClusterTreeConfig
 from .raptor.tree_retriever import TreeRetriever, TreeRetrieverConfig
 from .raptor import BaseSummarizationModel, BaseQAModel, BaseEmbeddingModel, RetrievalAugmentationConfig
 
-from ..models import get_pipeline, MODELS_PATH
+from ..models import get_pipeline
 from .vectordb import DB
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer
@@ -40,7 +40,7 @@ class SummarizationModel(BaseSummarizationModel):
 
 class EmbeddingModel(BaseEmbeddingModel):
     def __init__(self, model_name="all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(os.path.join(MODELS_PATH, model_name), trust_remote_code=True)
+        self.model = SentenceTransformer(os.path.join(os.environ["MODELS_PATH"], model_name), trust_remote_code=True)
 
     def create_embedding(self, text):
         return self.model.encode(text)

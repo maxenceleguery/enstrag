@@ -1,5 +1,9 @@
 __version__ = "0.0.5"
 
+import logging
+logger = logging.getLogger()
+logger.disabled = True
+
 def verify_execution() -> None:
     import socket
 
