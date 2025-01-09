@@ -22,10 +22,10 @@ class RagEmbedding(Embeddings):
             self.model = SentenceTransformer(os.path.join(MODELS_PATH, model_name), trust_remote_code=True)
 
         def embed_documents(self, texts: List[str]) -> List[List[float]]:
-            return [self.model.encode(t).tolist() for t in texts]
+            return self.model.encode(texts).tolist()
 
         def embed_query(self, query: str) -> List[float]:
-            return self.model.encode([query])[0].tolist()
+            return self.model.encode(query).tolist()
 
 def get_pipeline(model_name: str):
     if model_name not in get_available_models():

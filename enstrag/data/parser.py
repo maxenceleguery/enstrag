@@ -3,7 +3,9 @@ from unstructured.partition.text import partition_text
 from PyPDF2 import PdfReader
 import requests
 import os
+import pwd
 import re
+import shutil
 from langchain.docstore.document import Document
 from typing import List
 from hashlib import sha256
@@ -64,13 +66,12 @@ class Parser:
 
     @staticmethod
     def get_text_from_pdf_url(url: str, name: str = None) -> str:
+        TMP_FOLDER = "/tmp/enstrag_"+str(pwd.getpwuid(os.getuid())[0])
+        os.makedirs(TMP_FOLDER, exist_ok=True)
         if name is None:
             name = url
 
-        if not os.path.exists("/tmp/enstrag"):
-            os.makedirs("/tmp/enstrag", exist_ok=True)
-            os.chmod("/tmp/enstrag", 666)
-        with open('/tmp/enstrag/tmp.pdf', 'wb') as f:
+        with open(os.path.join(TMP_FOLDER, 'tmp.pdf'), 'wb') as f:
             try:
                 response = requests.get(url)
                 f.write(response.content)
@@ -78,8 +79,8 @@ class Parser:
                 print(f"Failed to download {url}. Ignoring...")
                 return ""
 
-        text = Parser.get_text_from_pdf('/tmp/enstrag/tmp.pdf', name=name)
-        os.remove('/tmp/enstrag/tmp.pdf')
+        text = Parser.get_text_from_pdf(os.path.join(TMP_FOLDER, 'tmp.pdf'), name=name)
+        shutil.rmtree(TMP_FOLDER)
         return text
 
     @staticmethod
