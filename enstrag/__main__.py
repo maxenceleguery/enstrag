@@ -62,8 +62,8 @@ agent = RagAgent(
     db=db,
 )
 # Explainable RAG
-tokenizer = AutoTokenizer.from_pretrained(llm_folder)
-config = AutoConfig.from_pretrained(llm_folder)
+tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
+config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
 perturber = LeaveOneOutPerturber()
 generator = SimpleGenerator()
@@ -71,17 +71,26 @@ comparator = EmbeddingComparator()
 
 pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
+"""
 def ask(query, history):
     result, retrieved_context = agent.answer_question(query, verbose=True)
+
     return result
-
-demo = gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")
+with gr.Blocks() as demo:
+    gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")
+    explain = gr.Button("Explain solution")
 demo.launch(share=True)
-
 """
+
 while True:
     query = input("Enter the question (Type exit to close)\n>>>")
     if query == "exit":
         break
     result, retrieved_context = agent.answer_question(query, verbose=True)
-"""
+
+    # Explainable part
+    k = int(input("How many top explicative tokens do you want?\n>>>"))
+    prompt = {"context": retrieved_context, "question": query}
+    top_tokens = pipeline_xrag.top_k_tokens(prompt, k)
+
+    print(f"\nThe top {k} tokens are", top_tokens)

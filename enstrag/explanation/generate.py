@@ -2,6 +2,7 @@
 from abc import abstractmethod
 from ..rag import RagAgent
 from typing import List
+from tqdm import tqdm
 
 
 class Generator:
@@ -14,4 +15,4 @@ class SimpleGenerator(Generator):
     """This generator simply calls the LLM and retrieve the answer"""
 
     def generator(self, perturbations, agent):
-        return [agent.prompt_llm(perturbation) for perturbation in perturbations]
+        return [agent.prompt_llm(perturbation) for perturbation in tqdm(perturbations)]

@@ -21,20 +21,25 @@ class XRAGPipeline:
         self.agent = agent
         self.embedding = embedding
 
-    def top_k_tokens(self, prompt: Dict[str, Any], gold_answer: str, k: int) -> List[str]:
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
         """Return the top k tokens that are the most influencial"""
+        print("Perturbing the prompt...")
         perturbed_prompts = self.perturber.perturb(prompt, self.tokenizer)
-        perturbed_answers = self.generator.generator(perturbed_prompts, self.agent)
-        comparison_scores = self.comparator.compare(perturbed_answers, gold_answer, self.embedding)
+        print("Generating perturbated answers...")
+        perturbated_answers = self.generator.generator(perturbed_prompts, self.agent)
+        print("Comparing to the original answer...")
+        gold_answer = self.agent.prompt_llm(prompt)
+        comparison_scores = self.comparator.compare(perturbated_answers, gold_answer, self.embedding)
 
-        # If the comparison scores are low, the token is influent
+        # If the comparison score is high, the token is influent
         array_scores = array(comparison_scores)
-        k_better_tokens = argsort(array_scores)[:k]
+        k_better_tokens = argsort(array_scores)[-k:]
 
         # Get the influent tokens
-        tokens = self.tokenizer(prompt["context"])
-        influent_tokens = tokens["input_ids"][k_better_tokens]
-        influent_str_tokens = self.tokenizer.decode(influent_tokens, skip_special_tokens=True)
+        context_tokens = self.tokenizer(prompt["context"])
+        n_context = len(context_tokens["input_ids"])
+        question_tokens = self.tokenizer(prompt["question"])
+        influent_tokens = [context_tokens["input_ids"][ind] if ind < n_context else question_tokens["input_ids"][ind - n_context] for ind in k_better_tokens]
+        influent_str_tokens = self.tokenizer.batch_decode(influent_tokens, skip_special_tokens=True)
 
-        print("Influent tokens:", influent_str_tokens)
         return influent_str_tokens

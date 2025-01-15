@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
@@ -29,10 +30,10 @@ class RagAgent:
     def _post_retrieval(self, retrieved_context: str):
         return retrieved_context
 
-    def prompt_llm(self, prompt: str) -> str:
-        """Prompt the LLM with a formatted prompt"""
-        return self.hf_pipeline(prompt)
-    
+    def prompt_llm(self, prompt: Dict[str, Any]) -> str:
+        """Prompt the LLM using batchs with the list of prompts"""
+        return self.llm_chain.invoke(prompt)
+
     def get_prompt(self, query, context) -> str:
         """Return the input of the LLM"""
         return self.prompt({"context": context, "question": query})
@@ -60,5 +61,3 @@ class RagAgent:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
         return result, retrieved_context
-    
-
