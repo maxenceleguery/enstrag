@@ -27,7 +27,8 @@ def global_cluster_embeddings(
     metric: str = "cosine",
 ) -> np.ndarray:
     if n_neighbors is None:
-        n_neighbors = int((len(embeddings) - 1) ** 0.5)
+        #n_neighbors = int((len(embeddings) - 1) ** 0.5)
+        n_neighbors = max(2, int((len(embeddings) - 1) ** 0.5))
     reduced_embeddings = umap.UMAP(
         n_neighbors=n_neighbors, n_components=dim, metric=metric
     ).fit_transform(embeddings)
