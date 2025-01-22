@@ -1,9 +1,9 @@
 from .raptor.cluster_tree_builder import ClusterTreeBuilder, ClusterTreeConfig
 from .raptor.tree_retriever import TreeRetriever, TreeRetrieverConfig
-from .raptor import BaseSummarizationModel, BaseQAModel, BaseEmbeddingModel, RetrievalAugmentationConfig
-
+from .raptor import BaseSummarizationModel, BaseEmbeddingModel
 from ..models import get_pipeline
 from .vectordb import DB
+
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer
 from typing import Literal, List
@@ -52,9 +52,11 @@ class RAPTORVectorDB(DB):
 
         self.tree = None
         self.tree_builder = ClusterTreeBuilder(ClusterTreeConfig(
-            summarization_model=SummarizationModel(),
-            embedding_models={"minilm": EmbeddingModel()},
-            cluster_embedding_model="minilm",
+            summarization_model = SummarizationModel(),
+            embedding_models = {"minilm": EmbeddingModel()},
+            cluster_embedding_model = "minilm",
+            max_tokens = 512,
+            clustering_params = {"verbose": True},
         ))
 
     def add_document(self, document: Document) -> None:
@@ -81,5 +83,5 @@ class RAPTORVectorDB(DB):
         self.tree = self.tree_builder.build_from_text(text=" ".join(list(map(lambda doc: doc.page_content, documents))))
         self.retriever = TreeRetriever(TreeRetrieverConfig(), self.tree)
 
-    def get_context_from_query(self, query:str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
-        return self.retriever.retrieve(query)
+    def get_context_from_query(self, query: str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+        return self.retriever.retrieve(query, top_k=topk)
