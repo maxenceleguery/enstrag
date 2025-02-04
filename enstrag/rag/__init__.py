@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
@@ -17,16 +18,25 @@ class RagAgent:
             "{question}\n"
             "Answer:"
         )
-        prompt = ChatPromptTemplate.from_template(template)
+        self.prompt = ChatPromptTemplate.from_template(template)
 
-        self.llm_chain = prompt | HuggingFacePipeline(pipeline=pipe)
+        self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
+        self.llm_chain = self.prompt | self.hf_pipeline
         self.db = db
 
     def _pre_retrieval(self, query: str):
         return query
-    
+
     def _post_retrieval(self, retrieved_context: str):
         return retrieved_context
+
+    def prompt_llm(self, prompt: Dict[str, Any]) -> str:
+        """Prompt the LLM using batchs with the list of prompts"""
+        return self.llm_chain.invoke(prompt)
+
+    def get_prompt(self, query, context) -> str:
+        """Return the input of the LLM"""
+        return self.prompt({"context": context, "question": query})
 
     def answer_question(self, query: str, verbose: bool = False) -> str:
         query = self._pre_retrieval(query)
@@ -34,7 +44,7 @@ class RagAgent:
         retrieved_context, sources = self.db.get_context_from_query(query)
 
         retrieved_context = self._post_retrieval(retrieved_context)
-        
+
         if verbose:
             print(f"\nContext from {sources} :\n{retrieved_context}\n")
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
