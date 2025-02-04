@@ -1,4 +1,4 @@
 from .gradio import GradioFront
-from .console import ConsoleFront
+from .console import ConsoleFront, XAIConsoleFront
 
-__all__ = ["GradioFront", "ConsoleFront"]
+__all__ = ["GradioFront", "ConsoleFront", "XAIConsoleFront"]

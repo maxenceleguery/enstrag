@@ -1,18 +1,4 @@
-print("Importing packages...")
-from .rag import RagAgent
-from .models import get_pipeline, RagEmbedding
-from .data import VectorDB, Parser
-
-# Explainable RAG
-from .explanation.pipeline import XRAGPipeline
-from .explanation.perturber import LeaveOneOutPerturber
-from .explanation.generate import SimpleGenerator
-from .explanation.compare import EmbeddingComparator
-
-from transformers import AutoTokenizer, AutoConfig
-
 from . import get_args
-
 args = get_args()
 
 from . import verify_execution
@@ -22,7 +8,16 @@ print("Importing packages...")
 from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
 from .data import VectorDB, Parser, FileDocument
-from .front import GradioFront
+from .front import GradioFront, XAIConsoleFront
+
+# Explainable RAG
+if args.explained:
+    from .explanation.pipeline import XRAGPipeline
+    from .explanation.perturber import LeaveOneOutPerturber
+    from .explanation.generate import SimpleGenerator
+    from .explanation.compare import EmbeddingComparator
+
+    from transformers import AutoTokenizer, AutoConfig
 
 llm_folder = args.llm_folder
 embedding_folder = args.embedding_folder
@@ -54,17 +49,18 @@ agent = RagAgent(
     db=db,
 )
 
-def ask(query, history):
-    result, retrieved_context = agent.answer_question(query, verbose=True)
-    return result
+if not args.explained:
+    front = GradioFront(agent)
+    front.launch()
+else:
+    tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
+    config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-demo = gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")
-demo.launch(share=True)
+    perturber = LeaveOneOutPerturber()
+    generator = SimpleGenerator()
+    comparator = EmbeddingComparator()
 
-"""
-while True:
-    query = input("Enter the question (Type exit to close)\n>>>")
-    if query == "exit":
-        break
-    result, retrieved_context = agent.answer_question(query, verbose=True)
-"""
+    pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
+
+    front = XAIConsoleFront(agent, pipeline_xrag)
+    front.launch()
