@@ -1,5 +1,19 @@
 __version__ = "0.0.5"
 
+import os
+"""
+import logging
+logger = logging.getLogger()
+logger.disabled = True
+"""
+
+import os
+"""
+import logging
+logger = logging.getLogger()
+logger.disabled = True
+"""
+
 def verify_execution() -> None:
     import socket
 
@@ -14,3 +28,25 @@ def verify_execution() -> None:
         print(f"Starting RAG on {hostname}")
     else:
         print(f"Starting RAG on unknown {hostname}")
+
+def get_args():
+    import argparse
+    parser = argparse.ArgumentParser(prog='Enstrag')
+
+    parser.add_argument('-r', '--reset', action='store_true', help="Reset the vector database on start.")
+    parser.add_argument('-v', '--version', action='store_true', help="Show version")
+    parser.add_argument('-x', '--explained', action='store_true', help="Provide explaination (XAI)")
+    parser.add_argument('--persist_dir', type=str, default="/home/ensta/ensta-leguery/enstrag_folder")
+    parser.add_argument('--models_path', type=str, default="/home/ensta/data")
+    parser.add_argument('--llm_folder', type=str, default="Qwen2.5-1.5B-Instruct")
+    parser.add_argument('--embedding_folder', type=str, default="all-MiniLM-L6-v2")
+    args = parser.parse_args()
+
+    if args.version:
+        from enstrag import __version__
+        print(__version__)
+        exit(0)
+    
+    os.environ["MODELS_PATH"] = args.models_path
+
+    return args

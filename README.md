@@ -6,6 +6,11 @@
 python3 -m pip install .
 ```
 
+For testing :
+```bash
+python3 -m pip install .[test]
+```
+
 ```bash
 srun --pty --time=00:30:00 --partition=ENSTA-h100 --gpus=1 bash
 conda activate <your env>

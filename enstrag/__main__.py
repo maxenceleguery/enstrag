@@ -1,26 +1,5 @@
-print("Importing packages...")
-from .rag import RagAgent
-from .models import get_pipeline, RagEmbedding
-from .data import VectorDB, Parser
-
-# Explainable RAG
-from .explanation.pipeline import XRAGPipeline
-from .explanation.perturber import LeaveOneOutPerturber
-from .explanation.generate import SimpleGenerator
-from .explanation.compare import EmbeddingComparator
-
-from transformers import AutoTokenizer, AutoConfig
-import argparse
-parser = argparse.ArgumentParser(prog='Enstrag')
-
-parser.add_argument('-r', '--reset', action='store_true', help="Reset the vector database on start.")
-parser.add_argument('-v', '--version', action='store_true', help="Show version")
-args = parser.parse_args()
-
-if args.version:
-    from . import __version__
-    print(__version__)
-    exit(0)
+from . import get_args
+args = get_args()
 
 from . import verify_execution
 verify_execution()
@@ -29,12 +8,20 @@ print("Importing packages...")
 from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
 from .data import VectorDB, Parser, FileDocument
+from .front import GradioFront, XAIConsoleFront
 
-import gradio as gr
+# Explainable RAG
+if args.explained:
+    from .explanation.pipeline import XRAGPipeline
+    from .explanation.perturber import LeaveOneOutPerturber
+    from .explanation.generate import SimpleGenerator
+    from .explanation.compare import EmbeddingComparator
 
-llm_folder = "Qwen2.5-1.5B-Instruct"
-embedding_folder = "all-MiniLM-L6-v2"
-persist_directory = "/home/ensta/ensta-leguery/enstrag_folder"
+    from transformers import AutoTokenizer, AutoConfig
+
+llm_folder = args.llm_folder
+embedding_folder = args.embedding_folder
+persist_directory = args.persist_dir
 
 embedding = RagEmbedding(embedding_folder)
 db = VectorDB(embedding, persist_directory=persist_directory)
@@ -61,36 +48,19 @@ agent = RagAgent(
     pipe=get_pipeline(llm_folder),
     db=db,
 )
-# Explainable RAG
-tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
-config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-perturber = LeaveOneOutPerturber()
-generator = SimpleGenerator()
-comparator = EmbeddingComparator()
+if not args.explained:
+    front = GradioFront(agent)
+    front.launch()
+else:
+    tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
+    config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
+    perturber = LeaveOneOutPerturber()
+    generator = SimpleGenerator()
+    comparator = EmbeddingComparator()
 
-"""
-def ask(query, history):
-    result, retrieved_context = agent.answer_question(query, verbose=True)
+    pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
-    return result
-with gr.Blocks() as demo:
-    gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")
-    explain = gr.Button("Explain solution")
-demo.launch(share=True)
-"""
-
-while True:
-    query = input("Enter the question (Type exit to close)\n>>>")
-    if query == "exit":
-        break
-    result, retrieved_context = agent.answer_question(query, verbose=True)
-
-    # Explainable part
-    k = int(input("How many top explicative tokens do you want?\n>>>"))
-    prompt = {"context": retrieved_context, "question": query}
-    top_tokens = pipeline_xrag.top_k_tokens(prompt, k)
-
-    print(f"\nThe top {k} tokens are", top_tokens)
+    front = XAIConsoleFront(agent, pipeline_xrag)
+    front.launch()

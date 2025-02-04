@@ -1,0 +1,16 @@
+import pytest
+
+from enstrag.data import Parser, FileDocument
+
+def test_download():
+    doc = FileDocument("http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf", "ML Bishop", "Machine learning")
+    docs = Parser.get_documents_from_filedocs([doc])
+    assert len(docs) == 1
+    assert docs[0].page_content != "", "Got an empty document."
+    assert docs[0].metadata["name"] == doc.name
+    assert docs[0].metadata["label"] == doc.label
+
+def test_text_cleaning():
+    text = "   \n \t Hello  world  !"
+    groud_truth = "Hello world !"
+    assert Parser.clean_text(text) == groud_truth

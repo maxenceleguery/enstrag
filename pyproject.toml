@@ -19,8 +19,19 @@ authors = [
   { name = "Simon Zarka-Arthus", email = "simon.zarka@ensta-paris.fr" },
 ]
 
-dependencies = ["langchain", "langchain-community", "langchain-huggingface", "langchain-chroma", "typing", "torch", "transformers", "accelerate", "unstructured[all-docs]", "PyPDF2", "gradio",
-"faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3", "openai"]
+dependencies = [
+    "langchain", "langchain-community", "langchain-huggingface", "langchain-chroma",
+    "typing",
+    "torch", "transformers", "accelerate", "openai",
+    "unstructured[all-docs]", "PyPDF2", "gradio",
+    "faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-repeat",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "enstrag.__version__" }
