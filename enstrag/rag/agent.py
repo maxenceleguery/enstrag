@@ -41,7 +41,7 @@ class RagAgent:
     def answer_question(self, query: str, verbose: bool = False) -> str:
         query = self._pre_retrieval(query)
 
-        retrieved_context, sources = self.db.get_context_from_query(query)
+        retrieved_context, sources, urls = self.db.get_context_from_query(query)
 
         retrieved_context = self._post_retrieval(retrieved_context)
 
@@ -56,8 +56,8 @@ class RagAgent:
         if "\[" in result and "\]" in result:
             result = result.replace("\[", "$$").replace("\]", "$$")
 
-        result = result + f"\n\nSources : {', '.join(list(sources))}"
+        #result = result + f"\n\nSources : {', '.join(list(sources))}"
         if verbose:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
-        return result, retrieved_context
+        return result, retrieved_context, ', '.join(list(sources)), urls[0]

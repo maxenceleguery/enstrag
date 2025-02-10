@@ -69,9 +69,10 @@ class VectorDB(DB):
         ).invoke(query)
         assert len(contexts) == topk, f"{len(contexts)} != {topk}"
 
-        sources = set(ctx.metadata.get("name") for ctx in contexts)
+        sources = list(set(ctx.metadata.get("name") for ctx in contexts))
+        urls = list(set(ctx.metadata.get("url") for ctx in contexts))
 
         return "\n".join(
             ctx.page_content for ctx in contexts
-        ), sources
+        ), sources, urls
 

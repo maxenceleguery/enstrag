@@ -88,7 +88,7 @@ class Parser:
         text =  Parser.get_text_from_pdf_url(filedoc.url, filedoc.name)
         if text == "":
             return None
-        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filedoc.name, "label": filedoc.label})
+        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filedoc.name, "label": filedoc.label, "url": filedoc.url})
     
     @staticmethod
     def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:
