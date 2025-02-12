@@ -48,7 +48,7 @@ agent = RagAgent(
 )
 
 def ask(query, history):
-    result, retrieved_context = agent.answer_question(query, verbose=True)
+    result, retrieved_context, *_ = agent.answer_question(query, verbose=True)
     return result
 
 demo = gr.ChatInterface(fn=ask, type="messages", title="Enstrag Bot")

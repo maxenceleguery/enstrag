@@ -48,5 +48,6 @@ def get_args():
         exit(0)
     
     os.environ["MODELS_PATH"] = args.models_path
+    os.environ["PERSIST_PATH"] = args.persist_dir
 
     return args

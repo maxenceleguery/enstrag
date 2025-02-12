@@ -38,10 +38,12 @@ class VectorDB(DB):
             embedding_function=embedding,
             persist_directory=persist_directory,
         )
+        self.themes = set()
 
     def add_document(self, document: Document) -> None:
         doc_hash = document.metadata["hash"]
         # Check if document is already in the database
+        self.themes.add(document.metadata.get("label"))
         if len(self.db.get(
             where={"hash": doc_hash}
         )["documents"]) > 0:
@@ -49,7 +51,7 @@ class VectorDB(DB):
             return
         
         print(f"Adding {document.metadata['name']} in database...")
-        
+    
         splits = self.text_splitter.split_documents([document])
         self.db.add_documents(splits)
 
@@ -57,7 +59,7 @@ class VectorDB(DB):
         for doc in documents:
             self.add_document(doc)
 
-    def get_context_from_query(self, query: str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> str:
+    def get_context_from_query(self, query: str, search_type: Literal["similarity", "mmr", "similarity_score_threshold"] = "similarity", topk: int = 4, fetch_k: int = 20 ) -> List[dict]:
         if search_type == "mmr":
             search_kwargs={'k': topk, 'fetch_k': fetch_k}
         else:
@@ -69,10 +71,16 @@ class VectorDB(DB):
         ).invoke(query)
         assert len(contexts) == topk, f"{len(contexts)} != {topk}"
 
-        sources = list(set(ctx.metadata.get("name") for ctx in contexts))
-        urls = list(set(ctx.metadata.get("url") for ctx in contexts))
+        chunks = []
+        for ctx in contexts:
+            chunks.append(
+                {
+                    "text" : ctx.page_content,
+                    "name" : ctx.metadata.get("name"),
+                    "url" : ctx.metadata.get("url"),
+                    "path" : ctx.metadata.get("path"),
+                }
+            )
 
-        return "\n".join(
-            ctx.page_content for ctx in contexts
-        ), sources, urls
+        return chunks
 
