@@ -1,5 +1,7 @@
 from typing import Dict, Any, List, Tuple
 import os
+import numpy as np
+from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
@@ -63,6 +65,18 @@ class RagAgent:
     def get_prompt(self, query, context) -> str:
         """Return the input of the LLM"""
         return self.prompt({"context": context, "question": query})
+    
+    def get_best_chunks_by_sim(self, chunks: List[dict], answer: str) -> str:
+        chunks_vectors = np.array(self.db.db.embeddings.embed_documents([chunk["text"] for chunk in chunks]))
+        answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
+
+        cosine_sim = np.dot(chunks_vectors, answer_vector)/(norm(chunks_vectors)*norm(answer_vector))
+        print(cosine_sim)
+        best_chunk_id = np.argmax(cosine_sim)
+        if os.environ.get("PERSIST_PATH") is None:
+            return chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"]
+        else:
+            return chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"]
 
     def answer_question(self, query: str, verbose: bool = False) -> Tuple[str, str, str, str]:
         query = self._pre_retrieval(query)
@@ -89,4 +103,4 @@ class RagAgent:
         if verbose:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
-        return result, retrieved_context, ', '.join(list(sources)), self.choose_best_document(chunks)
+        return result, retrieved_context, ', '.join(list(sources)), self.get_best_chunks_by_sim(chunks, result)

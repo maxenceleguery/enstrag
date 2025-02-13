@@ -1,6 +1,7 @@
 import gradio as gr
 import os
 import shutil
+import tqdm
 import requests
 import pwd
 from gradio_pdf import PDF
@@ -12,12 +13,21 @@ import pymupdf
 def highlight_text_in_pdf(pdf_file: str, highlight_text):
     page_number = 1
     doc = pymupdf.open(pdf_file)  # Open the PDF
-    for page in doc:
+    for page in tqdm.tqdm(doc, desc="Searching in doc..."):
         text_instances = page.search_for(highlight_text)  # Find text to highlight
         if len(text_instances) > 0:
             page_number = page.number
         for inst in text_instances:
             page.add_highlight_annot(inst)  # Highlight text
+
+    tmp = [page_number-2, page_number-1, page_number, page_number+1, page_number+2]
+    pages = []
+    for page in tmp:
+        if 0 <= page < len(doc):
+            pages.append(page)
+    print(pages)
+    doc.select(pages)
+
     # Save the modified PDF
     new_pdf_file = pdf_file.split("/")
     new_pdf_file[-1] = "new_" + new_pdf_file[-1]
@@ -28,7 +38,7 @@ def highlight_text_in_pdf(pdf_file: str, highlight_text):
 
 class GradioFront(Front):
     def ask(self, query):
-        result, retrieved_context, sources, (pdf_path, pdf_name) = self.agent.answer_question(query, verbose=True)
+        result, retrieved_context, sources, (pdf_path, pdf_name, context_to_highlight) = self.agent.answer_question(query, verbose=True)
 
         if os.environ.get("PERSIST_PATH") is None:
             url = pdf_path
@@ -43,10 +53,10 @@ class GradioFront(Front):
                     print(f"Failed to download {url}. Ignoring...")
                     return ""
 
-        context_to_highlight = retrieved_context[:25] #TODO Maybe the first chunk is not in the most relevant doc
+        context_to_highlight = context_to_highlight[:25]
         pdf, page_number = highlight_text_in_pdf(pdf_path, context_to_highlight)
         print(pdf)
-        return result, sources + f" - Page {page_number}", PDF(pdf, label=pdf_name, starting_page=page_number, interactive=True)
+        return result, sources + f" - Page {page_number}", PDF(pdf, label=pdf_name, starting_page=3, interactive=True)
 
     def launch(self):
 
