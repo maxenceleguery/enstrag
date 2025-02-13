@@ -1,13 +1,14 @@
 from unstructured.partition.pdf import partition_pdf
 from unstructured.partition.text import partition_text
 from PyPDF2 import PdfReader
+import pymupdf
 import requests
 import os
 import pwd
 import re
 import shutil
 from langchain.docstore.document import Document
-from typing import List
+from typing import List, Literal
 from hashlib import sha256
 from dataclasses import dataclass
 
@@ -45,19 +46,29 @@ class Parser:
         return " ".join(texts)
 
     @staticmethod
-    def get_text_from_pdf(path_to_pdf: str) -> str:
+    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> str:
         if not os.path.exists(path_to_pdf):
             raise FileNotFoundError(f"File {path_to_pdf} does not exist")
         if not path_to_pdf.endswith(".pdf"):
             raise ValueError(f"PDF file is expected. Got {path_to_pdf}")
         
-        reader = PdfReader(path_to_pdf)
         texts = []
-        for _, page in enumerate(reader.pages):
-            raw_text = page.extract_text()
-            if raw_text:
-                cleaned_text = Parser.clean_text(raw_text)
+        if backend == "PyPDF2":
+            reader = PdfReader(path_to_pdf)
+            for _, page in enumerate(reader.pages):
+                raw_text = page.extract_text()
+                if raw_text:
+                    cleaned_text = Parser.clean_text(raw_text)
+                    texts.append(cleaned_text+"\n\n")
+
+        elif backend == "pymupdf":
+            doc = pymupdf.open(path_to_pdf)
+            for page in doc:
+                cleaned_text = Parser.clean_text(page.get_textpage().extractText())
                 texts.append(cleaned_text+"\n\n")
+
+        else:
+            raise ValueError(f"Wrong pdf extraction backend. Got {backend} instead of 'PyPDF2' or 'pymupdf'")
 
         return " ".join(texts)
 

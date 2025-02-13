@@ -78,10 +78,10 @@ class RagAgent:
         else:
             return chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"]
 
-    def answer_question(self, query: str, verbose: bool = False) -> Tuple[str, str, str, str]:
+    def answer_question(self, query: str, topk_context: int = 4, verbose: bool = False) -> Tuple[str, str, str, str]:
         query = self._pre_retrieval(query)
 
-        chunks = self.db.get_context_from_query(query)
+        chunks = self.db.get_context_from_query(query, topk=topk_context)
 
         retrieved_context = "\n".join(chunk["text"] for chunk in chunks)
         sources = list(set([chunk["name"] for chunk in chunks]))
