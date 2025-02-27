@@ -1,13 +1,14 @@
 from unstructured.partition.pdf import partition_pdf
 from unstructured.partition.text import partition_text
 from PyPDF2 import PdfReader
+import pymupdf
 import requests
 import os
 import pwd
 import re
 import shutil
 from langchain.docstore.document import Document
-from typing import List
+from typing import List, Literal
 from hashlib import sha256
 from dataclasses import dataclass
 
@@ -43,52 +44,68 @@ class Parser:
                 texts.append(str(elem))
 
         return " ".join(texts)
-        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filename})]
 
     @staticmethod
-    def get_text_from_pdf(path_to_pdf: str, name: str = None) -> str:
+    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> str:
         if not os.path.exists(path_to_pdf):
             raise FileNotFoundError(f"File {path_to_pdf} does not exist")
         if not path_to_pdf.endswith(".pdf"):
             raise ValueError(f"PDF file is expected. Got {path_to_pdf}")
         
-        reader = PdfReader(path_to_pdf)
         texts = []
-        for _, page in enumerate(reader.pages):
-            raw_text = page.extract_text()
-            if raw_text:
-                cleaned_text = Parser.clean_text(raw_text)
+        if backend == "PyPDF2":
+            reader = PdfReader(path_to_pdf)
+            for _, page in enumerate(reader.pages):
+                raw_text = page.extract_text()
+                if raw_text:
+                    cleaned_text = Parser.clean_text(raw_text)
+                    texts.append(cleaned_text+"\n\n")
+
+        elif backend == "pymupdf":
+            doc = pymupdf.open(path_to_pdf)
+            for page in doc:
+                cleaned_text = Parser.clean_text(page.get_textpage().extractText())
                 texts.append(cleaned_text+"\n\n")
+
+        else:
+            raise ValueError(f"Wrong pdf extraction backend. Got {backend} instead of 'PyPDF2' or 'pymupdf'")
 
         return " ".join(texts)
 
-        return [Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": name})]
-
     @staticmethod
     def get_text_from_pdf_url(url: str, name: str = None) -> str:
-        TMP_FOLDER = "/tmp/enstrag_"+str(pwd.getpwuid(os.getuid())[0])
+        if os.environ.get("PERSIST_PATH") is not None:
+            TMP_FOLDER = os.path.join(os.environ.get("PERSIST_PATH"), "pdfs") 
+        else:
+            TMP_FOLDER = "/tmp/enstrag_"+str(pwd.getpwuid(os.getuid())[0])
+
         os.makedirs(TMP_FOLDER, exist_ok=True)
         if name is None:
-            name = url
+            name = url.replace("/", "_")
+        name = name.replace(" ", "_")
 
-        with open(os.path.join(TMP_FOLDER, 'tmp.pdf'), 'wb') as f:
-            try:
-                response = requests.get(url)
-                f.write(response.content)
-            except Exception:
-                print(f"Failed to download {url}. Ignoring...")
-                return ""
+        pdf_path = os.path.join(TMP_FOLDER, f'{name}.pdf')
+        if not os.path.exists(pdf_path):
+            with open(pdf_path, 'wb') as f:
+                try:
+                    response = requests.get(url)
+                    f.write(response.content)
+                except Exception:
+                    print(f"Failed to download {url}. Ignoring...")
+                    return ""
 
-        text = Parser.get_text_from_pdf(os.path.join(TMP_FOLDER, 'tmp.pdf'), name=name)
-        shutil.rmtree(TMP_FOLDER)
-        return text
+        text = Parser.get_text_from_pdf(pdf_path)
+
+        if os.environ.get("PERSIST_PATH") is None:
+            shutil.rmtree(TMP_FOLDER)
+        return text, pdf_path
 
     @staticmethod
     def get_document_from_filedoc(filedoc: FileDocument) -> Document:
-        text =  Parser.get_text_from_pdf_url(filedoc.url, filedoc.name)
+        text, pdf_path =  Parser.get_text_from_pdf_url(filedoc.url, filedoc.name)
         if text == "":
             return None
-        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filedoc.name, "label": filedoc.label})
+        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filedoc.name, "label": filedoc.label, "url": filedoc.url, "path": pdf_path})
     
     @staticmethod
     def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:

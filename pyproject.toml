@@ -23,7 +23,7 @@ dependencies = [
     "langchain", "langchain-community", "langchain-huggingface", "langchain-chroma",
     "typing",
     "torch", "transformers", "accelerate", "openai",
-    "unstructured[all-docs]", "PyPDF2", "gradio",
+    "unstructured[all-docs]", "PyPDF2", "PyMuPDF", "gradio", "gradio-pdf",
     "faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3",
 ]
 

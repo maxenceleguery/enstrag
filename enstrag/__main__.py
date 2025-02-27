@@ -51,7 +51,7 @@ agent = RagAgent(
 
 if not args.explained:
     front = GradioFront(agent)
-    front.launch()
+    front.launch(share=not args.local)
 else:
     tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
     config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)

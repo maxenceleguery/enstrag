@@ -1,4 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
+import os
+import numpy as np
+from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
@@ -27,8 +30,33 @@ class RagAgent:
     def _pre_retrieval(self, query: str):
         return query
 
-    def _post_retrieval(self, retrieved_context: str):
-        return retrieved_context
+    def _post_retrieval(self, chunks: List[dict]):
+        return chunks
+
+    @staticmethod
+    def choose_best_document(chunks: List[dict]) -> str:
+        sources = list(set([chunk["name"] for chunk in chunks]))
+        if len(sources) == 1:
+            if os.environ.get("PERSIST_PATH") is None:
+                return chunks[0]["url"], chunks[0]["name"]
+            else:
+                return chunks[0]["path"], chunks[0]["name"]
+        
+        counts = {}
+        for chunk in chunks:
+            if chunk["name"] not in counts.keys():
+                counts[chunk["name"]] = 0
+            counts[chunk["name"]] += 1 
+
+        best_doc_name = max(counts, key=counts.get)
+        for chunk in chunks:
+            if chunk["name"] == best_doc_name:
+                if os.environ.get("PERSIST_PATH") is None:
+                    return chunk["url"], chunk["name"]
+                else:
+                    return chunk["path"], chunk["name"]
+        return "", ""
+
 
     def prompt_llm(self, prompt: Dict[str, Any]) -> str:
         """Prompt the LLM using batchs with the list of prompts"""
@@ -37,13 +65,28 @@ class RagAgent:
     def get_prompt(self, query, context) -> str:
         """Return the input of the LLM"""
         return self.prompt({"context": context, "question": query})
+    
+    def get_best_chunks_by_sim(self, chunks: List[dict], answer: str) -> str:
+        chunks_vectors = np.array(self.db.db.embeddings.embed_documents([chunk["text"] for chunk in chunks]))
+        answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
 
-    def answer_question(self, query: str, verbose: bool = False) -> str:
+        cosine_sim = np.dot(chunks_vectors, answer_vector)/(norm(chunks_vectors)*norm(answer_vector))
+        print(cosine_sim)
+        best_chunk_id = np.argmax(cosine_sim)
+        if os.environ.get("PERSIST_PATH") is None:
+            return chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"]
+        else:
+            return chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"]
+
+    def answer_question(self, query: str, topk_context: int = 4, verbose: bool = False) -> Tuple[str, str, str, str]:
         query = self._pre_retrieval(query)
 
-        retrieved_context, sources = self.db.get_context_from_query(query)
+        chunks = self.db.get_context_from_query(query, topk=topk_context)
 
-        retrieved_context = self._post_retrieval(retrieved_context)
+        retrieved_context = "\n".join(chunk["text"] for chunk in chunks)
+        sources = list(set([chunk["name"] for chunk in chunks]))
+
+        chunks = self._post_retrieval(chunks)
 
         if verbose:
             print(f"\nContext from {sources} :\n{retrieved_context}\n")
@@ -56,8 +99,8 @@ class RagAgent:
         if "\[" in result and "\]" in result:
             result = result.replace("\[", "$$").replace("\]", "$$")
 
-        result = result + f"\n\nSources : {', '.join(list(sources))}"
+        #result = result + f"\n\nSources : {', '.join(list(sources))}"
         if verbose:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
-        return result, retrieved_context
+        return result, retrieved_context, ', '.join(list(sources)), self.get_best_chunks_by_sim(chunks, result)
