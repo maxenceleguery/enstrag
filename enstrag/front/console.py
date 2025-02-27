@@ -1,7 +1,7 @@
 from .base_front import Front
 
 class ConsoleFront(Front):
-    def launch(self):
+    def launch(self, share: bool = False) -> None:
         while True:
             query = input("Enter the question (Type exit to close)\n>>>")
             if query == "exit":
@@ -13,7 +13,7 @@ class XAIConsoleFront(Front):
         super().__init__(agent)
         self.pipeline_xrag = pipeline_xrag
 
-    def launch(self):
+    def launch(self, share: bool = False) -> None:
         while True:
             query = input("Enter the question (Type exit to close)\n>>>")
             if query == "exit":
