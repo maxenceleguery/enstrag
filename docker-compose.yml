@@ -1,15 +1,20 @@
-version: '3.8'
-
 services:
   rag-app:
-    image: maxenceleguery/enstrag:latest
+    image: maxenceleguery/enstrag:0.1.0
     container_name: rag-app
+    command: ["condapython3", "-m", "enstrag", "--local", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
     ports:
       - "7860:7860"
     volumes:
-      - /path/to/local/weights:/app/weights
-      - /path/to/local/vector_db:/app/vector_db
+      - /home/student/weights:/app/weights
+      - /home/student/vector_db:/app/vector_db
     environment:
       - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     restart: unless-stopped
-
