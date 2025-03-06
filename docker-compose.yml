@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  rag-app:
+    image: maxenceleguery/enstrag:latest
+    container_name: rag-app
+    ports:
+      - "7860:7860"
+    volumes:
+      - /path/to/local/weights:/app/weights
+      - /path/to/local/vector_db:/app/vector_db
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    restart: unless-stopped
+
