@@ -39,11 +39,20 @@ class GradioFront(Front):
                 with gr.Column(scale=2):
                     input = gr.Textbox(label="Question", autofocus=True, interactive=True)
                     btn = gr.Button("Ask", variant="primary")
-                    output = gr.Markdown(label="Anwser")
+                    output = gr.Markdown(
+                        label="Anwser",
+                        latex_delimiters=[
+                            { "left": "$$", "right": "$$", "display": True },
+                            { "left": "$", "right": "$", "display": False }
+                        ]
+                    )
                 with gr.Column(scale=2):
                     srcs = gr.Textbox(label="Sources", interactive=False)
                     pdf = PDF(label="Document")
                 
             btn.click(fn=self.ask, inputs=input, outputs=[output, srcs, pdf])
 
-        self.demo.launch(share=share)
+        self.demo.launch(
+            share=share,
+            allowed_paths=[os.environ.get("PERSIST_PATH")],
+        )
