@@ -1,6 +1,6 @@
 services:
   rag-app:
-    image: maxenceleguery/enstrag:0.1.0
+    image: maxenceleguery/enstrag:lastest
     container_name: rag-app
     command: ["condapython3", "-m", "enstrag", "--local", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
     ports:
