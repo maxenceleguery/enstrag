@@ -7,6 +7,7 @@ import os
 import pwd
 import re
 import shutil
+import json
 from langchain.docstore.document import Document
 from typing import List, Literal
 from hashlib import sha256
@@ -17,6 +18,41 @@ class FileDocument:
     url: str
     name: str
     label: str
+
+def store_filedoc(filedoc: FileDocument):
+    if (folder := os.environ.get("PERSIST_PATH")) is None:
+        return
+    
+    json_database = os.path.join(folder, "filedocs.json")
+    if os.path.exists(json_database):
+        with open(json_database, "r") as f:
+            filedocs = json.load(f)
+    else:
+        filedocs = []
+    for doc in filedocs:
+        if doc["url"] == filedoc.url or doc["name"] == filedoc.name:
+            return
+        
+    filedocs.append(
+        {
+            "url": filedoc.url,
+            "name": filedoc.name,
+            "label": filedoc.label
+        }
+    )
+    with open(json_database, "w") as f:
+        json.dump(filedocs, f)
+
+def load_filedocs() -> List[FileDocument]:
+    if (folder := os.environ.get("PERSIST_PATH")) is None:
+        return []
+    
+    json_database = os.path.join(folder, "filedocs.json")
+    if os.path.exists(json_database):
+        with open(json_database, "r") as f:
+            return [FileDocument(file["url"], file["name"], file["label"]) for file in json.load(f)]
+    return []
+            
 
 class Parser:
     def __init__(self):
@@ -102,6 +138,7 @@ class Parser:
 
     @staticmethod
     def get_document_from_filedoc(filedoc: FileDocument) -> Document:
+        store_filedoc(filedoc)
         text, pdf_path =  Parser.get_text_from_pdf_url(filedoc.url, filedoc.name)
         if text == "":
             return None
