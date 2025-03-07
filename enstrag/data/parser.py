@@ -16,6 +16,7 @@ from dataclasses import dataclass
 @dataclass
 class FileDocument:
     url: str
+    local_path: str
     name: str
     label: str
 
@@ -30,12 +31,13 @@ def store_filedoc(filedoc: FileDocument):
     else:
         filedocs = []
     for doc in filedocs:
-        if doc["url"] == filedoc.url or doc["name"] == filedoc.name:
+        if doc["url"] == filedoc.url or doc["local_path"] == filedoc.local_path or doc["name"] == filedoc.name:
             return
         
     filedocs.append(
         {
             "url": filedoc.url,
+            "local_path": filedoc.local_path,
             "name": filedoc.name,
             "label": filedoc.label
         }
@@ -50,7 +52,7 @@ def load_filedocs() -> List[FileDocument]:
     json_database = os.path.join(folder, "filedocs.json")
     if os.path.exists(json_database):
         with open(json_database, "r") as f:
-            return [FileDocument(file["url"], file["name"], file["label"]) for file in json.load(f)]
+            return [FileDocument(file["url"], file["local_path"], file["name"], file["label"]) for file in json.load(f)]
     return []
             
 
@@ -109,13 +111,12 @@ class Parser:
         return " ".join(texts)
 
     @staticmethod
-    def get_text_from_pdf_url(url: str, name: str = None) -> str:
-        if os.environ.get("PERSIST_PATH") is not None:
-            TMP_FOLDER = os.path.join(os.environ.get("PERSIST_PATH"), "pdfs") 
-        else:
-            TMP_FOLDER = "/tmp/enstrag_"+str(pwd.getpwuid(os.getuid())[0])
-
+    def download_pdf(url: str, name: str = None) -> str:
+        if os.environ.get("PERSIST_PATH") is None:
+            return ""
+        TMP_FOLDER = os.path.join(os.environ.get("PERSIST_PATH"), "pdfs") 
         os.makedirs(TMP_FOLDER, exist_ok=True)
+
         if name is None:
             name = url.replace("/", "_")
         name = name.replace(" ", "_")
@@ -130,19 +131,23 @@ class Parser:
                     print(f"Failed to download {url}. Ignoring...")
                     return ""
 
-        text = Parser.get_text_from_pdf(pdf_path)
+        return pdf_path
 
-        if os.environ.get("PERSIST_PATH") is None:
-            shutil.rmtree(TMP_FOLDER)
+    @staticmethod
+    def get_text_from_pdf_url(url: str, name: str = None) -> str:
+        pdf_path = Parser.download_pdf(url, name)
+        text = Parser.get_text_from_pdf(pdf_path)
         return text, pdf_path
 
     @staticmethod
     def get_document_from_filedoc(filedoc: FileDocument) -> Document:
+        if filedoc.local_path is None:
+            filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
+        text = Parser.get_text_from_pdf(filedoc.local_path)
         store_filedoc(filedoc)
-        text, pdf_path =  Parser.get_text_from_pdf_url(filedoc.url, filedoc.name)
         if text == "":
             return None
-        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": filedoc.name, "label": filedoc.label, "url": filedoc.url, "path": pdf_path})
+        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": str(filedoc.name), "label": str(filedoc.label), "url": str(filedoc.url), "path": str(filedoc.local_path)})
     
     @staticmethod
     def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:
