@@ -24,9 +24,11 @@ class XRAGPipeline:
     def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
         """Return the top k tokens that are the most influencial"""
         print("Perturbing the prompt...")
-        perturbed_prompts = self.perturber.perturb(prompt, self.tokenizer)
+        perturbations  = self.perturber.perturb(prompt, self.tokenizer)
+        pertubated_tokens = [perturbation[0] for perturbation in perturbations]
+        perturbated_prompts = [perturbation[1] for perturbation in perturbations]
         print("Generating perturbated answers...")
-        perturbated_answers = self.generator.generator(perturbed_prompts, self.agent)
+        perturbated_answers = self.generator.generator(perturbated_prompts, self.agent)
         print("Comparing to the original answer...")
         gold_answer = self.agent.prompt_llm(prompt)
         comparison_scores = self.comparator.compare(perturbated_answers, gold_answer, self.embedding)
@@ -36,10 +38,6 @@ class XRAGPipeline:
         k_better_tokens = argsort(array_scores)[-k:]
 
         # Get the influent tokens
-        context_tokens = self.tokenizer(prompt["context"])
-        n_context = len(context_tokens["input_ids"])
-        question_tokens = self.tokenizer(prompt["question"])
-        influent_tokens = [context_tokens["input_ids"][ind] if ind < n_context else question_tokens["input_ids"][ind - n_context] for ind in k_better_tokens]
-        influent_str_tokens = self.tokenizer.batch_decode(influent_tokens, skip_special_tokens=True)
+        influent_str_tokens = [pertubated_tokens[tk] for tk in k_better_tokens]
 
         return influent_str_tokens
