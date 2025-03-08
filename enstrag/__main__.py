@@ -13,7 +13,7 @@ from .front import GradioFront, XAIConsoleFront
 # Explainable RAG
 if args.explained:
     from .explanation.pipeline import XRAGPipeline
-    from .explanation.perturber import LeaveOneOutPerturber
+    from .explanation.perturber import LeaveOneOutPerturber, LeaveNounsOutPerturber
     from .explanation.generate import SimpleGenerator
     from .explanation.compare import EmbeddingComparator
 
@@ -56,7 +56,7 @@ else:
     tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
     config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-    perturber = LeaveOneOutPerturber()
+    perturber = LeaveNounsOutPerturber()
     generator = SimpleGenerator()
     comparator = EmbeddingComparator()
 
