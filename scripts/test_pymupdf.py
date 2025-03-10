@@ -1,7 +1,7 @@
 import os
 import requests
 import pwd
-from enstrag.front.gradio import highlight_text_in_pdf
+from enstrag.front.utils import highlight_text_in_pdf
 
 def test_highlight():
     url = "http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf"
