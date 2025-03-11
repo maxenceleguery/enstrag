@@ -57,18 +57,27 @@ agent = RagAgent(
     db=db,
 )
 
-if not args.explained:
-    front = GradioFront(agent)
-    front.launch(share=not args.local)
+if args.server:
+    import uvicorn
+    from .back.api import build_server
+
+    app = build_server(agent)
+
+    uvicorn.run(app)
+
 else:
-    tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
-    config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
+    if not args.explained:
+        front = GradioFront(agent)
+        front.launch(share=not args.local)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
+        config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-    perturber = LeaveOneOutPerturber()
-    generator = SimpleGenerator()
-    comparator = EmbeddingComparator()
+        perturber = LeaveOneOutPerturber()
+        generator = SimpleGenerator()
+        comparator = EmbeddingComparator()
 
-    pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
+        pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
-    front = XAIConsoleFront(agent, pipeline_xrag)
-    front.launch()
+        front = XAIConsoleFront(agent, pipeline_xrag)
+        front.launch()

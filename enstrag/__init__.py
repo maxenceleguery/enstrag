@@ -37,6 +37,7 @@ def get_args():
     parser.add_argument('-v', '--version', action='store_true', help="Show version")
     parser.add_argument('-x', '--explained', action='store_true', help="Provide explaination (XAI)")
     parser.add_argument('-l', '--local', action='store_true', help="Deactivate Gradio share feature")
+    parser.add_argument('-s', '--server', action='store_true', help="Enable FastAPI server mode")
     parser.add_argument('--persist_dir', type=str, default="/home/ensta/ensta-leguery/enstrag_folder")
     parser.add_argument('--models_path', type=str, default="/home/ensta/data")
     parser.add_argument('--llm_folder', type=str, default="Qwen2.5-1.5B-Instruct")
