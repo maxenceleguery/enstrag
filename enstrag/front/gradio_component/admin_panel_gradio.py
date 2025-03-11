@@ -5,8 +5,14 @@ import time
 import re
 from functools import partial
 from hashlib import sha256
-from ...data.parser import load_filedocs, Parser, FileDocument, store_filedoc
+from dataclasses import dataclass
 
+@dataclass
+class FileDocument:
+    url: str | None
+    local_path: str | None
+    name: str
+    label: str
 
 HASH_PASSWORD = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 
@@ -24,30 +30,29 @@ def toggle_visibility(choice):
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
 def add_doc(agent, url, path, name, label):
-    if url is not None and re.match(r'^https?://', url) is None:
+    if url is not None and re.match(r'^https?://.*\.pdf$', url, re.IGNORECASE) is None:
         return f"Invalid URL. Got {url}"
-    
-    if path is None:
-        path = Parser.download_pdf(url, name)
 
     filedoc = FileDocument(url, path, name, label)
-    store_filedoc(filedoc)
-    agent.db.add_document(Parser.get_document_from_filedoc(filedoc))
-    print(f"Received: {url}, {path}, {name}, {label}")
+    agent.add_filedoc(filedoc)
     return f"Document {name} added successfully"
 
 def add_document(agent, url, upload, name, label, method):
+    print(f"{url=}, {upload=}, {name=}, {label=}, {method=}")
     if name is None or label is None:
         return "Name and label are required"
     
-    if method == "URL":
-        return add_doc(agent, url, None, name, label)
-    else:
-        # Handle file upload
-        file_path = upload
-        path = os.path.join(os.environ.get("PERSIST_PATH"), "pdfs", name.replace(" ", "_")+".pdf")
-        shutil.copyfile(file_path, path)
-        return add_doc(agent, None, path, name, label)
+    try:
+        if method == "URL":
+            return add_doc(agent, url, None, name, label)
+        else:
+            # Handle file upload
+            file_path = upload
+            path = os.path.join(os.environ.get("PERSIST_PATH"), "pdfs", name.replace(" ", "_")+".pdf")
+            shutil.copyfile(file_path, path)
+            return add_doc(agent, None, path, name, label)
+    except Exception as e:
+        return f"Error : {e}"
 
 def build_admin_panel(agent):
 
@@ -68,7 +73,7 @@ def build_admin_panel(agent):
                     pass
                 with gr.Column() as add_doc:
                     name = gr.Textbox(label="Name", interactive=True)
-                    label = gr.Dropdown(choices=agent.db.themes, label="Label", interactive=True, allow_custom_value=True)
+                    label = gr.Dropdown(choices=agent.get_themes(), label="Label", interactive=True, allow_custom_value=True)
 
                     method = gr.Radio(choices=["URL", "Upload PDF"], label="Add document via", value="URL")
                     
@@ -80,15 +85,15 @@ def build_admin_panel(agent):
                     submit_output = gr.Markdown(label="")
 
                     method.change(fn=toggle_visibility, inputs=method, outputs=[url, submit_button, upload])
-                    upload.upload(fn=add_document, inputs=[url, upload, name, label, method], outputs=submit_output)
+                    upload.upload(fn=partial(add_document, agent), inputs=[url, upload, name, label, method], outputs=submit_output)
 
-                    submit_button.click(fn=partial(add_document, agent), inputs=[url, upload, name, label], outputs=submit_output)
+                    submit_button.click(fn=partial(add_document, agent), inputs=[url, upload, name, label, method], outputs=submit_output)
                 with gr.Column():
                     pass
 
             with gr.Tab("See documents"):
                 with gr.Blocks() as see_docs:
-                    docs = load_filedocs()
+                    docs = agent.get_docs()
                     string = "<ul>\n"
                     for doc in docs:
                         string += f"<li>{doc.name} ({doc.label})</li>\n"

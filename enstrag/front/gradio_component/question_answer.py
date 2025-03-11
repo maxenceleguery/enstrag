@@ -21,8 +21,7 @@ def ask(agent, query):
                 response = requests.get(url)
                 f.write(response.content)
             except Exception:
-                print(f"Failed to download {url}. Ignoring...")
-                return ""
+                raise RuntimeError(f"Failed to download {url}. Ignoring...")
 
     context_to_highlight = context_to_highlight[:25]
     pdf, page_number = highlight_text_in_pdf(pdf_path, context_to_highlight)
@@ -31,7 +30,7 @@ def ask(agent, query):
 
 def build_qa(agent):
     with gr.Blocks() as rag:
-        title = gr.HTML(f"<center><h1>Enstrag Bot</h1> <h3>{', '.join(agent.db.themes)}</h3></center>")
+        title = gr.HTML(f"<center><h1>Enstrag Bot</h1> <h3>{', '.join(agent.get_themes())}</h3></center>")
         with gr.Row():
             with gr.Column(scale=2):
                 input = gr.Textbox(label="Question", autofocus=True, interactive=True)

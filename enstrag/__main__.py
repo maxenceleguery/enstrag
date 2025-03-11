@@ -30,45 +30,52 @@ if args.reset:
     print("Resetting database...")
     db.db.reset_collection()
 
-db.add_documents(
-    Parser.get_documents_from_filedocs(
-        load_filedocs()
+    db.add_documents(
+        Parser.get_documents_from_filedocs([
+            FileDocument("http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf", None, "ML Bishop", "Machine learning"),
+            FileDocument("https://www.maths.lu.se/fileadmin/maths/personal_staff/Andreas_Jakobsson/StoicaM05.pdf", None, "SPECTRAL ANALYSIS OF SIGNALS", "Physics"),
+            FileDocument("https://www.math.toronto.edu/khesin/biblio/GoldsteinPooleSafkoClassicalMechanics.pdf", None, "CLASSICAL MECHANICS", "Physics"),
+            FileDocument("https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf", None, "Convex Optimization", "Maths"),
+            #"https://www.damtp.cam.ac.uk/user/tong/qft/qft.pdf",
+            FileDocument("http://students.aiu.edu/submissions/profiles/resources/onlineBook/Z6W3H3_basic%20algebra%20geometry.pdf", None, "Basic Algebraic Geometry", "Maths"),
+            FileDocument("https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf", None, "Organic Chemistry", "Chemistry"),
+            #"https://arxiv.org/pdf/1706.03762",
+            #"https://arxiv.org/pdf/2106.09685"
+        ])
     )
-)
-
-"""
-db.add_documents(
-    Parser.get_documents_from_filedocs([
-        FileDocument("http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf", None, "ML Bishop", "Machine learning"),
-        FileDocument("https://www.maths.lu.se/fileadmin/maths/personal_staff/Andreas_Jakobsson/StoicaM05.pdf", None, "SPECTRAL ANALYSIS OF SIGNALS", "Physics"),
-        FileDocument("https://www.math.toronto.edu/khesin/biblio/GoldsteinPooleSafkoClassicalMechanics.pdf", None, "CLASSICAL MECHANICS", "Physics"),
-        FileDocument("https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf", None, "Convex Optimization", "Maths"),
-        #"https://www.damtp.cam.ac.uk/user/tong/qft/qft.pdf",
-        FileDocument("http://students.aiu.edu/submissions/profiles/resources/onlineBook/Z6W3H3_basic%20algebra%20geometry.pdf", None, "Basic Algebraic Geometry", "Maths"),
-        FileDocument("https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf", None, "Organic Chemistry", "Chemistry"),
-        #"https://arxiv.org/pdf/1706.03762",
-        #"https://arxiv.org/pdf/2106.09685"
-    ])
-)
-"""
+else:
+    db.add_documents(
+        Parser.get_documents_from_filedocs(
+            load_filedocs()
+        )
+    )
 
 agent = RagAgent(
     pipe=get_pipeline(llm_folder),
     db=db,
 )
 
-if not args.explained:
-    front = GradioFront(agent)
-    front.launch(share=not args.local)
+if args.server:
+    import uvicorn
+    from .back.api import build_server
+
+    app = build_server(agent)
+
+    uvicorn.run(app, host="0.0.0.0")
+
 else:
-    tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
-    config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
+    if not args.explained:
+        front = GradioFront(agent)
+        front.launch(share=not args.local)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
+        config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
 
-    perturber = LeaveOneOutPerturber()
-    generator = SimpleGenerator()
-    comparator = EmbeddingComparator()
+        perturber = LeaveOneOutPerturber()
+        generator = SimpleGenerator()
+        comparator = EmbeddingComparator()
 
-    pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
+        pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
 
-    front = XAIConsoleFront(agent, pipeline_xrag)
-    front.launch()
+        front = XAIConsoleFront(agent, pipeline_xrag)
+        front.launch()

@@ -35,4 +35,6 @@ COPY ./pyproject.toml ./pyproject.toml
 RUN condapython3 -m pip install --default-timeout=100 .
     #&& rm -rf ./enstrag
 
+EXPOSE 8000
+
 CMD ["condapython3", "-m", "enstrag", "-v"]

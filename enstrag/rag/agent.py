@@ -5,7 +5,7 @@ from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
-from ..data import VectorDB
+from ..data import VectorDB, Parser, FileDocument, store_filedoc, load_filedocs
 
 class RagAgent:
     def __init__(self, pipe: Pipeline, db: VectorDB):
@@ -26,6 +26,25 @@ class RagAgent:
         self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
         self.llm_chain = self.prompt | self.hf_pipeline
         self.db = db
+
+    def get_themes(self):
+        docs = load_filedocs()
+        themes = list(set([doc.label for doc in docs]))
+        themes.sort()
+        return themes
+    
+    def add_filedoc(self, filedoc: FileDocument):
+        if filedoc.local_path is None:
+            filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
+        store_filedoc(filedoc)
+        self.add_document(Parser.get_document_from_filedoc(filedoc))
+
+    def get_docs(self):
+        docs = load_filedocs()
+        return docs
+    
+    def add_document(self, document) -> None:
+        return self.db.add_document(document)
 
     def _pre_retrieval(self, query: str):
         return query
