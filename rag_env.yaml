@@ -62,7 +62,6 @@ dependencies:
       - durationpy==0.9
       - email-validator==2.2.0
       - emoji==2.14.1
-      - enstrag==0.1.0
       - eval-type-backport==0.2.2
       - faiss-gpu-cu12==1.10.0
       - fastapi==0.115.11

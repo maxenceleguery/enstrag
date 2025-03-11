@@ -1,10 +1,15 @@
 services:
   rag-app:
-    image: maxenceleguery/enstrag:lastest
+    image: maxenceleguery/enstrag-server:latest
+    #build:
+    #  dockerfile: ./Dockerfile
+    
     container_name: rag-app
-    command: ["condapython3", "-m", "enstrag", "--local", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
+    command: ["condapython3", "-m", "enstrag", "--local", "--server", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
     ports:
-      - "7860:7860"
+      - "8000:8000"
+    networks:
+      - my_network
     volumes:
       - /home/student/weights:/app/weights
       - /home/student/vector_db:/app/vector_db
@@ -18,3 +23,25 @@ services:
               count: 1
               capabilities: [gpu]
     restart: unless-stopped
+
+  front:
+    image: maxenceleguery/enstrag-front:latest
+    #build: 
+    #  dockerfile: /home/student/enstrag/Dockerfilefront
+    depends_on:
+      - rag-app
+    ports:
+      - "7861:7861"
+    networks:
+      - my_network
+    volumes:
+      - /home/student/vector_db:/app/vector_db
+    environment:
+      - API_URL=http://rag-app:8000
+      - PERSIST_PATH=/app/vector_db
+
+    restart: unless-stopped
+
+networks:
+  my_network:
+    driver: bridge

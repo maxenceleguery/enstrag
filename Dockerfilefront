@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+RUN pip install --no-cache-dir gradio gradio_pdf pymupdf
+
+COPY ./enstrag/front ./front
+EXPOSE 7861
+ENV GRADIO_SERVER_NAME="0.0.0.0"
+
+CMD ["python3", "-m", "front"]
