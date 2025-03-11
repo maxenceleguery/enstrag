@@ -15,8 +15,8 @@ from dataclasses import dataclass
 
 @dataclass
 class FileDocument:
-    url: str
-    local_path: str
+    url: str | None
+    local_path: str | None
     name: str
     label: str
 
