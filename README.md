@@ -17,3 +17,8 @@ srun --pty --time=00:30:00 --partition=ENSTA-h100 --gpus=1 bash
 conda activate <your env>
 python3 -m enstrag
 ```
+
+For evaluation, add the dataset to the main folder and go to enstrag folder :
+```bash
+python3 -m enstrag.metrics.chunks_evaluation
+```
