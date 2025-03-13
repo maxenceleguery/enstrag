@@ -1,8 +1,8 @@
 services:
   rag-app:
-    #image: maxenceleguery/enstrag-server:latest
-    build:
-      dockerfile: ./Dockerfile
+    image: maxenceleguery/enstrag-server:latest
+    #build:
+    #  dockerfile: ./Dockerfile
     
     container_name: rag-app
     command: ["condapython3", "-m", "enstrag", "--local", "--server", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
@@ -25,9 +25,9 @@ services:
     restart: unless-stopped
 
   front:
-    #image: maxenceleguery/enstrag-front:latest
-    build: 
-      dockerfile: /home/student/enstrag/Dockerfilefront
+    image: maxenceleguery/enstrag-front:latest
+    #build: 
+    #  dockerfile: /home/student/enstrag/Dockerfilefront
     depends_on:
       - rag-app
     ports:

@@ -36,8 +36,7 @@ def explain(agent, query):
     chunks = agent.last_context.split("\n")
 
     text = " ".join(chunks)
-    #tokens = agent.top_k_tokens({"context": agent.last_context, "question": query}, 3)
-    tokens = ["distribution"]
+    tokens = agent.top_k_tokens({"context": agent.last_context, "question": query}, 3)
     for token in tokens:
         text = text.replace(token, f"<span style='background-color:#ea580c; color:black'>{token}</span>")
     return text
