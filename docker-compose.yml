@@ -1,8 +1,8 @@
 services:
   rag-app:
-    image: maxenceleguery/enstrag-server:latest
-    #build:
-    #  dockerfile: ./Dockerfile
+    #image: maxenceleguery/enstrag-server:latest
+    build:
+      dockerfile: ./Dockerfile
     
     container_name: rag-app
     command: ["condapython3", "-m", "enstrag", "--local", "--server", "--persist_dir", "/app/vector_db", "--models_path", "/app/weights"]
@@ -25,9 +25,9 @@ services:
     restart: unless-stopped
 
   front:
-    image: maxenceleguery/enstrag-front:latest
-    #build: 
-    #  dockerfile: /home/student/enstrag/Dockerfilefront
+    #image: maxenceleguery/enstrag-front:latest
+    build: 
+      dockerfile: /home/student/enstrag/Dockerfilefront
     depends_on:
       - rag-app
     ports:
@@ -39,8 +39,22 @@ services:
     environment:
       - API_URL=http://rag-app:8000
       - PERSIST_PATH=/app/vector_db
-
     restart: unless-stopped
+
+  restarter:
+    image: docker:cli
+    restart: unless-stopped
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        while true; do
+          if [ "$$(date +'%H:%M')" = '00:00' ]; then
+            docker restart rag-app
+            docker restart front
+          fi
+          sleep 60
+        done
 
 networks:
   my_network:

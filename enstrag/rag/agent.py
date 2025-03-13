@@ -4,11 +4,18 @@ import numpy as np
 from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
-from transformers import Pipeline
+from transformers import Pipeline, AutoTokenizer, AutoConfig
+
+from ..explanation.pipeline import XRAGPipeline
+from ..explanation.generate import SimpleGenerator
+from ..explanation.compare import EmbeddingComparator
+
+
+from ..explanation.perturber import Perturber
 from ..data import VectorDB, Parser, FileDocument, store_filedoc, load_filedocs
 
 class RagAgent:
-    def __init__(self, pipe: Pipeline, db: VectorDB):
+    def __init__(self, pipe: Pipeline, db: VectorDB, perturber: Perturber = None):
         template = (
             "You are an assistant for question-answering tasks. "
             "Use the following context and your knowledge to directly answer the following question without just repeating the context. "
@@ -26,6 +33,15 @@ class RagAgent:
         self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
         self.llm_chain = self.prompt | self.hf_pipeline
         self.db = db
+
+        self.pipeline_xrag = None
+        if perturber is not None:
+            self.pipeline_xrag = XRAGPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
+
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
+        if self.pipeline_xrag is None:
+            return [""]
+        return self.pipeline_xrag.top_k_tokens(prompt, k)
 
     def get_themes(self):
         docs = load_filedocs()

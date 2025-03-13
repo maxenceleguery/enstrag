@@ -9,15 +9,7 @@ from .rag import RagAgent
 from .models import get_pipeline, RagEmbedding
 from .data import VectorDB, load_filedocs, Parser, FileDocument
 from .front import GradioFront, XAIConsoleFront
-
-# Explainable RAG
-if args.explained:
-    from .explanation.pipeline import XRAGPipeline
-    from .explanation.perturber import LeaveOneOutPerturber, LeaveNounsOutPerturber
-    from .explanation.generate import SimpleGenerator
-    from .explanation.compare import EmbeddingComparator
-
-    from transformers import AutoTokenizer, AutoConfig
+from .explanation.perturber import LeaveOneOutPerturber, LeaveNounsOutPerturber
 
 llm_folder = args.llm_folder
 embedding_folder = args.embedding_folder
@@ -53,6 +45,7 @@ else:
 agent = RagAgent(
     pipe=get_pipeline(llm_folder),
     db=db,
+    perturber=LeaveNounsOutPerturber(),
 )
 
 if args.server:
@@ -64,18 +57,5 @@ if args.server:
     uvicorn.run(app, host="0.0.0.0")
 
 else:
-    if not args.explained:
-        front = GradioFront(agent)
-        front.launch(share=not args.local)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained('/home/ensta/data/' + llm_folder)
-        config = AutoConfig.from_pretrained('/home/ensta/data/' + llm_folder)
-
-        perturber = LeaveOneOutPerturber()
-        generator = SimpleGenerator()
-        comparator = EmbeddingComparator()
-
-        pipeline_xrag = XRAGPipeline(perturber, generator, comparator, tokenizer, agent, embedding)
-
-        front = XAIConsoleFront(agent, pipeline_xrag)
-        front.launch()
+    front = GradioFront(agent)
+    front.launch(share=not args.local)

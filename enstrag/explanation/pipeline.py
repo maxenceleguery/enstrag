@@ -5,7 +5,6 @@ from ..models import RagEmbedding
 from .perturber import Perturber
 from .generate import Generator
 from .compare import Comparator
-from ..rag import RagAgent
 from typing import List, Dict, Any
 
 
@@ -13,7 +12,7 @@ class XRAGPipeline:
     """A class to define the Explainable RAG Pipeline"""
 
     def __init__(self, perturber: Perturber, generator: Generator, comparator: Comparator,
-                 tokenizer: AutoTokenizer, agent: RagAgent, embedding: RagEmbedding):
+                 tokenizer: AutoTokenizer, agent, embedding: RagEmbedding):
         self.perturber = perturber
         self.generator = generator
         self.comparator = comparator

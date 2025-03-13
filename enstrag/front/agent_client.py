@@ -2,6 +2,7 @@ import requests
 import os
 import time
 from dataclasses import dataclass, asdict
+from typing import Dict, List, Any
 
 @dataclass
 class FileDocument:
@@ -53,6 +54,18 @@ class AgentClient():
         body = response.json()
         
         return body["result"], body["retrieved_context"], body["sources"], (body["pdf_path"], body["pdf_name"], body["context_to_highlight"])
+
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
+        prompt.update({"k": k})
+        response = requests.get(f"{self.API_URL}/topk", params=prompt)
+
+        if 400 <= response.status_code <= 599:
+            raise RuntimeError(f"topk endpoint failed with status code {response.status_code}")
+        
+        body = response.json()
+        print("Receiving : ", body)
+
+        return body
     
 if __name__ == "__main__":
     agent = AgentClient()

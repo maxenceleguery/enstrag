@@ -7,11 +7,6 @@ from dataclasses import asdict
 from ..data import FileDocument
 from ..rag import RagAgent
 
-class FileDocumentPydantic(BaseModel):
-    url: str
-    local_path: str
-    name: str
-    label: str
 
 def build_server(agent: RagAgent):
     app: FastAPI = FastAPI()
@@ -49,6 +44,12 @@ def build_server(agent: RagAgent):
     async def get_docs():
         docs = agent.get_docs()
         return docs
+    
+    @app.get("/topk", response_model=List[str])
+    async def top_k_tokens(context: str, question: str, k: int):
+        tokens_str = agent.top_k_tokens({"context": context, "question": question}, k)
+        print("Sending : ", tokens_str)
+        return tokens_str
     
     app.add_middleware(
         CORSMiddleware,

@@ -1,13 +1,12 @@
 """Defined the generator of the explained pipeline"""
 from abc import abstractmethod
-from ..rag import RagAgent
 from typing import List
 from tqdm import tqdm
 
 
 class Generator:
     @abstractmethod
-    def generator(self, perturbations: List[str], agent: RagAgent) -> List[str]:
+    def generator(self, perturbations: List[str], agent) -> List[str]:
         ...
 
 
