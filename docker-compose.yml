@@ -43,6 +43,9 @@ services:
 
   restarter:
     image: docker:cli
+    depends_on:
+      - rag-app
+      - front
     restart: unless-stopped
     volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
     entrypoint: ["/bin/sh","-c"]
