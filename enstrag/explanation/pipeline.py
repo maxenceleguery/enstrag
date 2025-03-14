@@ -1,8 +1,7 @@
 """Define the whole explainable pipeline"""
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, Pipeline, Qwen2ForCausalLM
 from numpy import array, argsort, argpartition
 from ..models import RagEmbedding
-from ..rag.agent import RagAgent
 from .perturber import Perturber
 from .generate import Generator
 from .compare import Comparator
@@ -20,7 +19,7 @@ class PerturbationPipeline(XRAGPipeline):
     """A class to define the Explainable RAG Pipeline with perturbation"""
 
     def __init__(self, perturber: Perturber, generator: Generator, comparator: Comparator,
-                 tokenizer: AutoTokenizer, agent:RagAgent, embedding: RagEmbedding):
+                 tokenizer: AutoTokenizer, agent, embedding: RagEmbedding):
         self.perturber = perturber
         self.generator = generator
         self.comparator = comparator
@@ -53,24 +52,26 @@ class PerturbationPipeline(XRAGPipeline):
 class GradientPipeline(XRAGPipeline):
     """A class to define the Explainable RAG Pipeline with gradient"""
 
-    def __init__(self, tokenizer: AutoTokenizer, agent:RagAgent, embedding: RagEmbedding):
-        self.tokenizer = tokenizer
-        self.model = agent.hf_pipeline.model
+    def __init__(self, pipe: Pipeline, embedding: RagEmbedding, prompt_template):
+        self.tokenizer = pipe.tokenizer
+        self.model = pipe.model
         self.embedding = embedding
+        self.prompt_template = prompt_template
     
     def top_k_tokens(self, prompt: dict[str, Any], k: int) -> list[str]:
         """Return the top k tokens that are the most influencial"""
+        prompt = self.prompt_template.format(context=prompt["context"], question=prompt["question"])
         inputs = self.tokenizer(prompt, return_tensors="pt")
-        embeddings = self.model.embeddings.word_embeddings(inputs['input_ids'])
+        embeddings = self.model.model.embed_tokens(inputs['input_ids'].to(self.model.device))
         embeddings.retain_grad()
 
-        outputs = self.model(inputs_embeds=embeddings)
-
-        loss = outputs.last_hidden_state.sum()
+        outputs = self.model(inputs_embeds=embeddings, output_hidden_states=True)
+        last_hidden_state = outputs.hidden_states[-1]
+        loss = last_hidden_state.sum()
         loss.backward()  
 
         gradients = embeddings.grad
-        average_gradients = gradients[0].mean(dim=1).detach().numpy()
+        average_gradients = gradients[0].mean(dim=1).detach().cpu().numpy()
 
         tokens = self.tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
         scores = array(average_gradients)

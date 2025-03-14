@@ -6,7 +6,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
 
-from ..explanation.pipeline import PerturbationPipeline
+from ..explanation.pipeline import PerturbationPipeline, GradientPipeline
 from ..explanation.generate import SimpleGenerator
 from ..explanation.compare import EmbeddingComparator
 
@@ -36,7 +36,8 @@ class RagAgent:
 
         self.pipeline_xrag = None
         if perturber is not None:
-            self.pipeline_xrag = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
+            self.pipeline_xrag = GradientPipeline(pipe, self.db.embedding, self.prompt)
+            #self.pipeline_xrag = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
 
     def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
         if self.pipeline_xrag is None:
