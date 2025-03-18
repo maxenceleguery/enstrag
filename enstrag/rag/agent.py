@@ -106,6 +106,7 @@ class RagAgent:
         sources = list(set([chunk["name"] for chunk in chunks]))
 
         chunks = self._post_retrieval(chunks)
+        print("chunks", chunks)
 
         if verbose:
             print(f"\nContext from {sources} :\n{retrieved_context}\n")
