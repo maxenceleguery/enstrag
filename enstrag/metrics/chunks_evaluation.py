@@ -2,6 +2,7 @@ import re
 import sys
 import os
 import json
+import random
 
 # Add the parent directory to the sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -11,6 +12,21 @@ from enstrag.rag import RagAgent
 from enstrag.models import get_pipeline, RagEmbedding
 from enstrag.data import VectorDB, Parser, FileDocument
 
+EVALUATION_PROMPT = """###Task Description:
+For the given instruction, you are asked to evaluate the response based on the reference answer, on a score from 0 to 5 (0 being completely false answer, 5 being the exact answer). You must only output the score as an integer, after the 'Answer score' tag.
+
+###The instruction to evaluate:
+{instruction}
+
+###Response to evaluate:
+{response}
+
+###Reference Answer:
+{reference_answer}
+
+###Answer score (between 0 and 5):
+"""
+
 def load_dataset(filepath):
     with open(filepath, 'r') as file:
         return json.load(file)
@@ -18,11 +34,14 @@ def load_dataset(filepath):
 def evaluate_rag(agent, dataset):
     table_data = []
 
-    for data in dataset[0:1]:
+    eval_pipe = get_pipeline("Ministral-8B-Instruct-2410")
+
+    for data in random.sample(dataset, 10):
         question = data["Question"]
         expected_answer = data["Answer"]
         expected_chunk = data["Chunks"][0]["chunk"]
         expected_chunk_page = data["Chunks"][0]["metadata"][0]["page"]
+        # expected_chunk_page = data["Chunks"][0]["metadata"]["page"] si final_dataset.json
 
         generated_answer, retrieved_context, sources, best_chunk = agent.answer_question(question)
 
@@ -37,13 +56,26 @@ def evaluate_rag(agent, dataset):
         best_chunk_page_match = re.search(r'page (\d+)', best_chunk[2])
         best_chunk_page = best_chunk_page_match.group(1) if best_chunk_page_match else "N/A"
 
-        table_data.append((expected_chunk_page, best_chunk_page))
+        # table_data.append((expected_chunk_page, best_chunk_page))
+
+        # Benchmarking by a judge agent
+        eval_prompt = EVALUATION_PROMPT.format(
+            instruction=question,
+            response=generated_answer,
+            reference_answer=expected_answer,
+        )
+        # print(f"\neval_prompt:\n", eval_prompt)
+        eval_result = eval_pipe(eval_prompt, return_full_text=True, max_new_tokens=2)
+        print(eval_result)
+        score = int(re.findall(r'\d+', eval_result[0]['generated_text'].split("###Answer score (between 0 and 5):\n")[1])[0])
+
+        table_data.append((expected_chunk_page, best_chunk_page, score))
 
     # Display the table
-    print(f"{'Expected Chunk Page':<20} {'Best Chunk Page':<15}")
-    print("-" * 35)
+    print(f"{'Expected Chunk Page':<20} {'Best Chunk Page':<20} {'Score':<20}")
+    print("-" * 60)
     for row in table_data:
-        print(f"{row[0]:<20} {row[1]:<15}")
+        print(f"{row[0]:<20} {row[1]:<20} {row[2]:<20}")
 
 if __name__ == "__main__":
     args = get_args()
@@ -82,7 +114,7 @@ if __name__ == "__main__":
     )
 
     # Load the dataset
-    dataset = load_dataset('/home/ensta/ensta-joyeux/enstrag/dataset/dataset_classical_mechanics.json')
+    dataset = load_dataset('/home/ensta/ensta-matteo.denis/ProjetIA/enstrag/enstrag/metrics/evaluation_datasets/dataset_classical_mechanics.json')
 
     # Evaluate the RAG agent
     evaluate_rag(agent, dataset)
