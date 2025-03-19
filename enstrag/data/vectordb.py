@@ -53,6 +53,7 @@ class VectorDB(DB):
         print(f"Adding {document.metadata['name']} in database...")
     
         splits = self.text_splitter.split_documents([document])
+        print("Split_example : ", splits[512])
         self.db.add_documents(splits)
 
     def add_documents(self, documents: List[Document]) -> None:
@@ -83,4 +84,3 @@ class VectorDB(DB):
             )
 
         return chunks
-
