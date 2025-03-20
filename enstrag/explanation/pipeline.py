@@ -1,5 +1,6 @@
 """Define the whole explainable pipeline"""
 from transformers import AutoTokenizer, Pipeline, Qwen2ForCausalLM
+import torch
 from numpy import array, argsort, argpartition
 from ..models import RagEmbedding
 from .perturber import Perturber
@@ -57,19 +58,35 @@ class GradientPipeline(XRAGPipeline):
         self.model = pipe.model
         self.embedding = embedding
         self.prompt_template = prompt_template
-    
+
+   
     def top_k_tokens(self, prompt: dict[str, Any], k: int) -> list[str]:
-        """Return the top k tokens that are the most influencial"""
+        """Return the top k tokens that are the most influential for the generated output."""
         prompt = self.prompt_template.format(context=prompt["context"], question=prompt["question"])
         inputs = self.tokenizer(prompt, return_tensors="pt")
+        input_ids = inputs["input_ids"].to(self.model.device)
         embeddings = self.model.model.embed_tokens(inputs['input_ids'].to(self.model.device))
         embeddings.retain_grad()
+        
+        if True:
+            outputs = self.model(inputs_embeds=embeddings, output_hidden_states=True)
+            
+            logits = outputs.logits  # Shape: (batch, seq_len, vocab_size)
+            
+            # Get predicted token probabilities
+            probs = torch.nn.functional.softmax(logits, dim=-1)  # Convert logits to probabilities
+            target_ids = input_ids[:, 1:]  # Shift left to align with next token predictions
+            target_probs = torch.gather(probs[:, :-1, :], 2, target_ids.unsqueeze(-1)).squeeze(-1)
+            
+            loss = -torch.sum(torch.log(target_probs))        
 
-        outputs = self.model(inputs_embeds=embeddings, output_hidden_states=True)
-        last_hidden_state = outputs.hidden_states[-1]
-        loss = last_hidden_state.sum()
-        loss.backward()  
-
+        else:
+            outputs = self.model(inputs_embeds=embeddings, output_hidden_states=True)
+            last_hidden_state = outputs.hidden_states[-1]
+            loss = last_hidden_state.sum()
+        
+        loss.backward()
+        
         gradients = embeddings.grad
         average_gradients = gradients[0].mean(dim=1).detach().cpu().numpy()
 
@@ -77,7 +94,6 @@ class GradientPipeline(XRAGPipeline):
         scores = array(average_gradients)
 
         max_scores = argsort(scores)[-k:]
-        # max_scores = argpartition(scores, -k)[-k:]
 
-        return  [tokens[tk] for tk in max_scores]
+        return [tokens[tk] for tk in max_scores]
 
