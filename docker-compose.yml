@@ -36,6 +36,7 @@ services:
       - my_network
     volumes:
       - /home/student/vector_db:/app/vector_db
+      - /home/student/enstrag/https:/app/https
     environment:
       - API_URL=http://rag-app:8000
       - PERSIST_PATH=/app/vector_db
