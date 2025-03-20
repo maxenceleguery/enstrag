@@ -37,7 +37,7 @@ class PerturbationPipeline(XRAGPipeline):
         print("Generating perturbated answers...")
         perturbated_answers = self.generator.generator(perturbated_prompts, self.agent)
         print("Comparing to the original answer...")
-        gold_answer = self.agent.prompt_llm(prompt)
+        gold_answer = self.agent.prompt_llm([prompt])
         comparison_scores = self.comparator.compare(perturbated_answers, gold_answer, self.embedding)
 
         # If the comparison score is high, the token is influent
@@ -46,7 +46,7 @@ class PerturbationPipeline(XRAGPipeline):
 
         # Get the influent tokens
         influent_str_tokens = [pertubated_tokens[tk] for tk in k_better_tokens]
-
+        print(influent_str_tokens)
         return influent_str_tokens
     
 

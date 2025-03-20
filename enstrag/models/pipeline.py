@@ -11,5 +11,6 @@ def get_pipeline(model_name: str):
         model=os.path.join(os.environ["MODELS_PATH"], model_name),
         device=0,
         max_length=1024,
-        truncation=True
+        truncation=True,
+        batch_size=64
     )

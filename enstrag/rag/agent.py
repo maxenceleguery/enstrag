@@ -32,11 +32,14 @@ class RagAgent:
         self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
         self.llm_chain = self.prompt | self.hf_pipeline
         self.db = db
+        
+        # For decoder-only architecture
+        pipe.tokenizer.padding_side = "left"
 
         self.pipeline_xrag = None
         if perturber is not None:
-            self.pipeline_xrag = GradientPipeline(pipe, self.db.embedding, self.prompt)
-            #self.pipeline_xrag = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
+            #self.pipeline_xrag = GradientPipeline(pipe, self.db.embedding, self.prompt)
+            self.pipeline_xrag = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
 
     def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
         if self.pipeline_xrag is None:
@@ -93,9 +96,11 @@ class RagAgent:
         return "", ""
 
 
-    def prompt_llm(self, prompt: Dict[str, Any]) -> str:
-        """Prompt the LLM using batchs with the list of prompts"""
-        return self.llm_chain.invoke(prompt)
+    def prompt_llm(self, prompts: list[dict[str, Any]]) -> list[str]:
+        """Prompt the LLM using batches with the list of prompts"""
+        format_prompts = [self.prompt.format(**prompt) for prompt in prompts]
+        return self.hf_pipeline.batch(format_prompts)
+
 
     def get_prompt(self, query, context) -> str:
         """Return the input of the LLM"""

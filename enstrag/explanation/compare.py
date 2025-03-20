@@ -18,6 +18,6 @@ class EmbeddingComparator(Comparator):
     def compare(self, perturbated_answers, gold_answer, embedding, similarity=cosine_similarity):
         """Compare the perturbated answers to the gold_answer but computing a similarity score"""
         comparison_scores =  [1 - similarity(embedding.embed_query(p_answer), embedding.embed_query(g_answer))
-                for p_answer, g_answer in zip(perturbated_answers, gold_answer)]
+                for p_answer, g_answer in zip(perturbated_answers, gold_answer[0])]
         max_value = max(comparison_scores)
         return list(map(lambda x: x/max_value, comparison_scores))
