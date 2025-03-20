@@ -7,7 +7,6 @@ from dataclasses import asdict
 from ..data import FileDocument
 from ..rag import RagAgent
 
-
 def build_server(agent: RagAgent):
     app: FastAPI = FastAPI()
 

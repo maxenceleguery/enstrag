@@ -51,7 +51,7 @@ agent = RagAgent(
 if args.server:
     import uvicorn
     from .back.api import build_server
-
+    
     app = build_server(agent)
 
     uvicorn.run(app, host="0.0.0.0")

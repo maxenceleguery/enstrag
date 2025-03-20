@@ -9,9 +9,8 @@ from transformers import Pipeline
 from ..explanation.pipeline import PerturbationPipeline, GradientPipeline
 from ..explanation.generate import SimpleGenerator
 from ..explanation.compare import EmbeddingComparator
-
-
 from ..explanation.perturber import Perturber
+
 from ..data import VectorDB, Parser, FileDocument, store_filedoc, load_filedocs
 
 class RagAgent:

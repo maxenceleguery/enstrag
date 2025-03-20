@@ -6,7 +6,6 @@ from .gradio_component import build_admin_panel, build_qa_panel
 
 class GradioFront(Front):
     def launch(self, share: bool = False, server_port: int = 7860) -> None:
-
         rag = build_qa_panel(self.agent)
         admin = build_admin_panel(self.agent)
 

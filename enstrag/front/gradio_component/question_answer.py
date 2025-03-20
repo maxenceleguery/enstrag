@@ -42,7 +42,6 @@ def explain(agent, query):
     return text
 
 def build_qa_panel(agent):
-
     with gr.Blocks() as rag:
         title = gr.HTML(f"<center><h1>Enstrag Bot</h1> <h3>{', '.join(agent.get_themes())}</h3></center>")
         with gr.Row():
