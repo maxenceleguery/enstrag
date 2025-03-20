@@ -4,6 +4,7 @@ from gradio_pdf import PDF
 import requests
 import pwd
 import os
+import re
 from functools import partial
 
 from ..utils import highlight_text_in_pdf
@@ -38,7 +39,7 @@ def explain(agent, query):
     text = " ".join(chunks)
     tokens = agent.top_k_tokens({"context": agent.last_context, "question": query}, 20)
     for token in tokens:
-        if token.strip() not in ["-"]:
+        if not re.fullmatch(r"[^\w\s]+", token.strip()):
             text = text.replace(token, f"<span style='background-color:#ea580c; color:black'>{token}</span>")
     return text
 
