@@ -34,7 +34,7 @@ def evaluate_rag(agent, dataset, dataset_name, output_file):
 
             # Clean the expected chunk using Parser.clean_text
             cleaned_expected_chunk = Parser.clean_text(expected_chunk)
-
+            
             generated_answer, retrieved_context, sources, best_chunk, chunks = agent.answer_question_for_evaluation(question)
             classified_chunks = best_chunk[3]
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     ]
 
     # Evaluate the RAG agent for each dataset and write results to a CSV file
-    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/results_manhattan_distance.csv'
+    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/test.csv'
 
     # Write the header once
     with open(output_file, 'w', newline='') as csvfile:
