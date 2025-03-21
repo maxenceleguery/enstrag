@@ -33,7 +33,7 @@ class VectorDB(DB):
         )
         splits = text_splitter.split_documents(documents)
         """
-
+        self.embedding = embedding
         self.db = Chroma(
             embedding_function=embedding,
             persist_directory=persist_directory,
@@ -79,6 +79,7 @@ class VectorDB(DB):
                     "name" : ctx.metadata.get("name"),
                     "url" : ctx.metadata.get("url"),
                     "path" : ctx.metadata.get("path"),
+                    "page_number" : ctx.metadata.get("page_number"),
                 }
             )
 

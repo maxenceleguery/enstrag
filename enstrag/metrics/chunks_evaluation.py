@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import csv
+import random
 
 # Add the parent directory to the sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -92,15 +93,15 @@ if __name__ == "__main__":
 
     # List of dataset file paths
     dataset_filepaths = [
-        '/home/ensta/ensta-joyeux/enstrag/dataset/dataset_machine_learning.json',
-        '/home/ensta/ensta-joyeux/enstrag/dataset/dataset_classical_mechanics.json',
-        '/home/ensta/ensta-joyeux/enstrag/dataset/dataset_algebraic_geometry.json',
-        '/home/ensta/ensta-joyeux/enstrag/dataset/dataset_chemistry.json'
+        './dataset/dataset_machine_learning.json',
+        './dataset/dataset_classical_mechanics.json',
+        './dataset/dataset_algebraic_geometry.json',
+        './dataset/dataset_chemistry.json'
 
     ]
 
     # Evaluate the RAG agent for each dataset and write results to a CSV file
-    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/results.csv'
+    output_file = './enstrag/metrics/results.csv'
 
     # Write the header once
     with open(output_file, 'w', newline='') as csvfile:

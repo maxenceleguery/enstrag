@@ -32,7 +32,8 @@ RUN . /opt/miniconda/bin/activate \
     && rm -rf /root/.cache/*
 COPY ./enstrag ./enstrag
 COPY ./pyproject.toml ./pyproject.toml
-RUN condapython3 -m pip install --default-timeout=100 .
+RUN condapython3 -m pip install --default-timeout=100 . \
+    && condapython3 -m spacy download en_core_web_sm
     #&& rm -rf ./enstrag
 
 EXPOSE 8000
