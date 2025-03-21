@@ -13,6 +13,21 @@ from enstrag.rag import RagAgent
 from enstrag.models import get_pipeline, RagEmbedding
 from enstrag.data import VectorDB, Parser, FileDocument
 
+EVALUATION_PROMPT = """###Task Description:
+For the given instruction, you are asked to evaluate the response based on the reference answer, on a score from 0 to 5 (0 being completely false answer, 5 being the exact answer). You must only output the score as an integer, after the 'Answer score' tag.
+
+###The instruction to evaluate:
+{instruction}
+
+###Response to evaluate:
+{response}
+
+###Reference Answer:
+{reference_answer}
+
+###Answer score (between 0 and 5):
+"""
+
 def load_dataset(filepath):
     with open(filepath, 'r') as file:
         return json.load(file)
@@ -24,6 +39,7 @@ def count_common_words(text1, text2):
     return len(common_words), len(words1)
 
 def evaluate_rag(agent, dataset, dataset_name, output_file):
+    eval_pipe = get_pipeline("Ministral-8B-Instruct-2410")
     with open(output_file, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
 
@@ -48,6 +64,17 @@ def evaluate_rag(agent, dataset, dataset_name, output_file):
                 common_word_count, total_words = count_common_words(cleaned_expected_chunk, chunk_text)
                 percentage_common_words = (common_word_count / total_words) * 100
                 chunk_percentages.append(percentage_common_words)
+
+            # Benchmarking by a judge agent
+            eval_prompt = EVALUATION_PROMPT.format(
+                instruction=question,
+                response=generated_answer,
+                reference_answer=expected_answer,
+            )
+
+            eval_result = eval_pipe(eval_prompt, return_full_text=True, max_new_tokens=2)
+            score = int(re.findall(r'\d+', eval_result[0]['generated_text'].split("###Answer score (between 0 and 5):\n")[1])[0])
+            print("score", score)
 
             # Write the results to the CSV file
             writer.writerow([
