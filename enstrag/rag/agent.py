@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Literal
 import os
 import numpy as np
 from numpy.linalg import norm
@@ -9,12 +9,12 @@ from transformers import Pipeline
 from ..explanation.pipeline import PerturbationPipeline, GradientPipeline
 from ..explanation.generate import SimpleGenerator
 from ..explanation.compare import EmbeddingComparator
-from ..explanation.perturber import Perturber
+from ..explanation.perturber import Perturber, LeaveNounsOutPerturber
 
 from ..data import VectorDB, Parser, FileDocument, store_filedoc, load_filedocs
 
 class RagAgent:
-    def __init__(self, pipe: Pipeline, db: VectorDB, perturber: Perturber = None):
+    def __init__(self, pipe: Pipeline, db: VectorDB, perturber: Perturber = LeaveNounsOutPerturber):
         template = (
             "You are an assistant for question-answering tasks. "
             "Use the following context and your knowledge to directly answer the following question without just repeating the context. "
@@ -36,15 +36,16 @@ class RagAgent:
         # For decoder-only architecture
         pipe.tokenizer.padding_side = "left"
 
-        self.pipeline_xrag = None
-        if perturber is not None:
-            #self.pipeline_xrag = GradientPipeline(pipe, self.db.embedding, self.prompt)
-            self.pipeline_xrag = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
+        self.pipeline_xrag_grad = GradientPipeline(pipe, self.db.embedding, self.prompt)
+        self.pipeline_xrag_pert = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
 
-    def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
-        if self.pipeline_xrag is None:
-            return [""]
-        return self.pipeline_xrag.top_k_tokens(prompt, k)
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int, method: Literal["gradient", "perturbation"] = "perturbation") -> List[str]:
+        if method == "perturbation":
+            return self.pipeline_xrag_pert.top_k_tokens(prompt, k)
+        if method == "gradient":
+            return self.pipeline_xrag_grad.top_k_tokens(prompt, k)
+        
+        raise ValueError(f"Wrong method for explanation. Got {method}")
 
     def get_themes(self):
         docs = load_filedocs()

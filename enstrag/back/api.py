@@ -45,8 +45,8 @@ def build_server(agent: RagAgent):
         return docs
     
     @app.get("/topk", response_model=List[str])
-    async def top_k_tokens(context: str, question: str, k: int):
-        tokens_str = agent.top_k_tokens({"context": context, "question": question}, k)
+    async def top_k_tokens(context: str, question: str, k: int, method: str):
+        tokens_str = agent.top_k_tokens({"context": context, "question": question}, k, method)
         print("Sending : ", tokens_str)
         return tokens_str
     

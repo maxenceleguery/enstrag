@@ -55,8 +55,8 @@ class AgentClient():
         
         return body["result"], body["retrieved_context"], body["sources"], (body["pdf_path"], body["pdf_name"], body["context_to_highlight"])
 
-    def top_k_tokens(self, prompt: Dict[str, Any], k: int) -> List[str]:
-        prompt.update({"k": k})
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int, method: str) -> List[str]:
+        prompt.update({"k": k, "method": method})
         response = requests.get(f"{self.API_URL}/topk", params=prompt)
 
         if 400 <= response.status_code <= 599:

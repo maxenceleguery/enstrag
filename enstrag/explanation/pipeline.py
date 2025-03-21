@@ -95,5 +95,7 @@ class GradientPipeline(XRAGPipeline):
 
         max_scores = argsort(scores)[-k:]
 
-        return [tokens[tk] for tk in max_scores]
+        influent_str_tokens = [tokens[tk] for tk in max_scores]
+        print(influent_str_tokens)
+        return influent_str_tokens
 
