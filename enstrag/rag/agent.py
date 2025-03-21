@@ -178,11 +178,11 @@ class RagAgent:
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
         result = op.split("Answer:")[-1].strip()
 
-        if "\(" in result and "\)" in result:
-            result = result.replace("\(", "$").replace("\)", "$")
+        if r"\(" in result and r"\)" in result:
+            result = result.replace(r"\(", "$").replace(r"\)", "$")
 
-        if "\[" in result and "\]" in result:
-            result = result.replace("\[", "$$").replace("\]", "$$")
+        if r"\[" in result and r"\]" in result:
+            result = result.replace(r"\[", "$$").replace(r"\]", "$$")
 
         if verbose:
             print(f"\nYour question : {query}\n\n Predicted result: {result}")

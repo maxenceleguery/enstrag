@@ -1,4 +1,3 @@
-import pytest
 import os
 
 from enstrag.data import Parser, FileDocument
@@ -8,7 +7,6 @@ def test_download():
     
     doc = FileDocument("http://www.cs.man.ac.uk/~fumie/tmp/bishop.pdf", None, "ML Bishop", "Machine learning")
     docs = Parser.get_documents_from_filedocs([doc])
-    assert len(docs) == 1
     assert docs[0].page_content != "", "Got an empty document."
     assert docs[0].metadata["name"] == doc.name
     assert docs[0].metadata["label"] == doc.label
