@@ -80,7 +80,7 @@ class Parser:
         return " ".join(texts)
 
     @staticmethod
-    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> str:
+    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> List[tuple[str, int]]:
         if not os.path.exists(path_to_pdf):
             raise FileNotFoundError(f"File {path_to_pdf} does not exist")
         if not path_to_pdf.endswith(".pdf"):
@@ -89,22 +89,22 @@ class Parser:
         texts = []
         if backend == "PyPDF2":
             reader = PdfReader(path_to_pdf)
-            for _, page in enumerate(reader.pages):
+            for page_number, page in enumerate(reader.pages, start=1):
                 raw_text = page.extract_text()
                 if raw_text:
                     cleaned_text = Parser.clean_text(raw_text)
-                    texts.append(cleaned_text+"\n\n")
+                    texts.append((cleaned_text, page_number))
 
         elif backend == "pymupdf":
             doc = pymupdf.open(path_to_pdf)
-            for page in doc:
+            for page_number, page in enumerate(doc, start=1):
                 cleaned_text = Parser.clean_text(page.get_textpage().extractText())
-                texts.append(cleaned_text+"\n\n")
+                texts.append((cleaned_text, page_number))
 
         else:
             raise ValueError(f"Wrong pdf extraction backend. Got {backend} instead of 'PyPDF2' or 'pymupdf'")
 
-        return " ".join(texts)
+        return texts
 
     @staticmethod
     def download_pdf(url: str, name: str = None) -> str:
@@ -136,20 +136,34 @@ class Parser:
         return text, pdf_path
 
     @staticmethod
-    def get_document_from_filedoc(filedoc: FileDocument) -> Document:
+    def get_document_from_filedoc(filedoc: FileDocument) -> List[Document]:
         if filedoc.local_path is None:
             filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
-        text = Parser.get_text_from_pdf(filedoc.local_path)
+        text_pages = Parser.get_text_from_pdf(filedoc.local_path)
         store_filedoc(filedoc)
-        if text == "":
-            return None
-        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": str(filedoc.name), "label": str(filedoc.label), "url": str(filedoc.url), "path": str(filedoc.local_path)})
-    
+        if not text_pages:
+            return []
+        
+        documents = []
+        for text, page_number in text_pages:
+            print('page_number', page_number)
+            documents.append(Document(
+                page_content=text,
+                metadata={
+                    "hash": sha256(text.encode('utf-8')).hexdigest(),
+                    "name": str(filedoc.name),
+                    "label": str(filedoc.label),
+                    "url": str(filedoc.url),
+                    "path": str(filedoc.local_path),
+                    "page_number": str(page_number) # Add current page number to metadata
+                }
+            ))
+        return documents
+
     @staticmethod
     def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:
         docs = []
         for filedoc in filedocs:
-            doc = Parser.get_document_from_filedoc(filedoc)
-            if doc is not None:
-                docs.append(doc)
+            documents = Parser.get_document_from_filedoc(filedoc)
+            docs.extend(documents)
         return docs

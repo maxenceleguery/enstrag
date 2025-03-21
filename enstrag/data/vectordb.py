@@ -79,8 +79,11 @@ class VectorDB(DB):
                     "name" : ctx.metadata.get("name"),
                     "url" : ctx.metadata.get("url"),
                     "path" : ctx.metadata.get("path"),
+                    "page_number" : ctx.metadata.get("page_number"),
                 }
             )
+
+        print("chunks", chunks)
 
         return chunks
 
