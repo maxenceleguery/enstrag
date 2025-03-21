@@ -83,7 +83,4 @@ class VectorDB(DB):
                 }
             )
 
-        print("chunks", chunks)
-
         return chunks
-

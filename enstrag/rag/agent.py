@@ -112,12 +112,28 @@ class RagAgent:
         answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
 
         cosine_sim = np.dot(chunks_vectors, answer_vector)/(norm(chunks_vectors)*norm(answer_vector))
-        print(cosine_sim)
+        print("Cosine_sim:", cosine_sim)
         best_chunk_id = np.argmax(cosine_sim)
         if os.environ.get("PERSIST_PATH") is None:
             return chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"]
         else:
             return chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"]
+        
+    def get_best_chunks_by_sim_for_evaluation(self, chunks: List[dict], answer: str) -> Tuple[str, str, str, List[str]]:
+        chunks_vectors = np.array(self.db.db.embeddings.embed_documents([chunk["text"] for chunk in chunks]))
+        answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
+
+        cosine_sim = np.dot(chunks_vectors, answer_vector) / (norm(chunks_vectors) * norm(answer_vector))
+        best_chunk_id = np.argmax(cosine_sim)
+        if os.environ.get("PERSIST_PATH") is None:
+            best_chunk = (chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], cosine_sim)
+        else:
+            best_chunk = (chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], cosine_sim)
+
+        # Classify chunks based on cosine similarity
+        classified_chunks = [chunk["text"] for _, chunk in sorted(zip(cosine_sim, chunks), reverse=True)]
+
+        return best_chunk[0], best_chunk[1], best_chunk[2], classified_chunks
 
     def answer_question(self, query: str, topk_context: int = 4, verbose: bool = False) -> Tuple[str, str, str, str]:
         query = self._pre_retrieval(query)
@@ -146,3 +162,29 @@ class RagAgent:
             #print(f"\nOp : {op}")
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
         return result, retrieved_context, ', '.join(list(sources)), self.get_best_chunks_by_sim(chunks, result)
+
+    def answer_question_for_evaluation(self, query: str, topk_context: int = 4, verbose: bool = False) -> Tuple[str, str, str, Tuple[str, str, str, np.ndarray], str]:
+        query = self._pre_retrieval(query)
+
+        chunks = self.db.get_context_from_query(query, topk=topk_context)
+
+        retrieved_context = "\n".join(chunk["text"] for chunk in chunks)
+        sources = list(set([chunk["name"] for chunk in chunks]))
+
+        chunks = self._post_retrieval(chunks)
+
+        if verbose:
+            print(f"\nContext from {sources} :\n{retrieved_context}\n")
+        op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
+        result = op.split("Answer:")[-1].strip()
+
+        if "\(" in result and "\)" in result:
+            result = result.replace("\(", "$").replace("\)", "$")
+
+        if "\[" in result and "\]" in result:
+            result = result.replace("\[", "$$").replace("\]", "$$")
+
+        if verbose:
+            print(f"\nYour question : {query}\n\n Predicted result: {result}")
+        
+        return result, retrieved_context, ', '.join(list(sources)), self.get_best_chunks_by_sim_for_evaluation(chunks, result), chunks

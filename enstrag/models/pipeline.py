@@ -10,7 +10,7 @@ def get_pipeline(model_name: str):
         task="text-generation",
         model=os.path.join(os.environ["MODELS_PATH"], model_name),
         device=0,
-        max_length=1024,
-        truncation=True,
+        max_length=2048,
+        truncation=True
         batch_size=64
     )
