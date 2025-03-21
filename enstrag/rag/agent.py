@@ -1,14 +1,20 @@
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Literal
 import os
 import numpy as np
 from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import Pipeline
-from ..data import VectorDB
+
+from ..explanation.pipeline import PerturbationPipeline, GradientPipeline
+from ..explanation.generate import SimpleGenerator
+from ..explanation.compare import EmbeddingComparator
+from ..explanation.perturber import Perturber, LeaveNounsOutPerturber
+
+from ..data import VectorDB, Parser, FileDocument, store_filedoc, load_filedocs
 
 class RagAgent:
-    def __init__(self, pipe: Pipeline, db: VectorDB):
+    def __init__(self, pipe: Pipeline, db: VectorDB, perturber: Perturber = LeaveNounsOutPerturber):
         template = (
             "You are an assistant for question-answering tasks. "
             "Use the following context and your knowledge to directly answer the following question without just repeating the context. "
@@ -26,6 +32,39 @@ class RagAgent:
         self.hf_pipeline = HuggingFacePipeline(pipeline=pipe)
         self.llm_chain = self.prompt | self.hf_pipeline
         self.db = db
+        
+        # For decoder-only architecture
+        pipe.tokenizer.padding_side = "left"
+
+        self.pipeline_xrag_grad = GradientPipeline(pipe, self.db.embedding, self.prompt)
+        self.pipeline_xrag_pert = PerturbationPipeline(perturber, SimpleGenerator(), EmbeddingComparator(), pipe.tokenizer, self, self.db.embedding)
+
+    def top_k_tokens(self, prompt: Dict[str, Any], k: int, method: Literal["gradient", "perturbation"] = "perturbation") -> List[str]:
+        if method == "perturbation":
+            return self.pipeline_xrag_pert.top_k_tokens(prompt, k)
+        if method == "gradient":
+            return self.pipeline_xrag_grad.top_k_tokens(prompt, k)
+        
+        raise ValueError(f"Wrong method for explanation. Got {method}")
+
+    def get_themes(self):
+        docs = load_filedocs()
+        themes = list(set([doc.label for doc in docs]))
+        themes.sort()
+        return themes
+    
+    def add_filedoc(self, filedoc: FileDocument):
+        if filedoc.local_path is None:
+            filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
+        store_filedoc(filedoc)
+        self.add_document(Parser.get_document_from_filedoc(filedoc))
+
+    def get_docs(self):
+        docs = load_filedocs()
+        return docs
+    
+    def add_document(self, document) -> None:
+        return self.db.add_document(document)
 
     def _pre_retrieval(self, query: str):
         return query
@@ -58,9 +97,11 @@ class RagAgent:
         return "", ""
 
 
-    def prompt_llm(self, prompt: Dict[str, Any]) -> str:
-        """Prompt the LLM using batchs with the list of prompts"""
-        return self.llm_chain.invoke(prompt)
+    def prompt_llm(self, prompts: list[dict[str, Any]]) -> list[str]:
+        """Prompt the LLM using batches with the list of prompts"""
+        format_prompts = [self.prompt.format(**prompt) for prompt in prompts]
+        return self.hf_pipeline.batch(format_prompts)
+
 
     def get_prompt(self, query, context) -> str:
         """Return the input of the LLM"""

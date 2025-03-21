@@ -1,8 +1,8 @@
 from enstrag import get_args
 args = get_args()
 
-from enstrag.models import RagEmbedding
-from enstrag.data import VectorDB, Parser, FileDocument
+#from enstrag.models import RagEmbedding
+#from enstrag.data import VectorDB, Parser, FileDocument
 from enstrag.rag import RagAgent
 
 def test_retrieval():

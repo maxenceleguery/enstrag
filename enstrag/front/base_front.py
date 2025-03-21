@@ -1,9 +1,7 @@
 import abc
 
-from ..rag import RagAgent
-
 class Front(abc.ABC):
-    def __init__(self, agent: RagAgent):
+    def __init__(self, agent):
         self.agent = agent
 
     @abc.abstractmethod

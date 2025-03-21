@@ -18,7 +18,7 @@ jobs:
         name: Setup python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.11'
       -
         name: Get version
         run: |
@@ -36,8 +36,20 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
-        name: Build and push
+        name: Build and push server
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/enstrag:${{ env.VERSION }}
+          file: "Dockerfile"
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/enstrag-server:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/enstrag-server:${{ env.VERSION }}
+      -
+        name: Build and push front
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          file: "Dockerfilefront"
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/enstrag-front:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/enstrag-front:${{ env.VERSION }}

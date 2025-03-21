@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta" # If not defined, then legacy behavior c
 [project]
 name = "enstrag"
 dynamic = ["version"]
-description = "A sample Python project"
+description = "A Python project to create a RAG pipeline for ENSTA courses"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 keywords = ["rag", "ensta"]
 
 authors = [
@@ -20,11 +20,10 @@ authors = [
 ]
 
 dependencies = [
-    "langchain", "langchain-community", "langchain-huggingface", "langchain-chroma",
-    "typing",
-    "torch", "transformers", "accelerate", "openai",
-    "unstructured[all-docs]", "PyPDF2", "PyMuPDF", "gradio", "gradio-pdf",
-    "faiss-cpu", "tenacity", "tiktoken", "umap-learn", "urllib3",
+    "numpy", "langchain", "langchain-huggingface", "unstructured",
+    "pdfminer.six", "pi-heif", "unstructured-inference", "pdf2image",
+    "PyPDF2", "pymupdf", "langchain-chroma", "tiktoken", "umap", "openai",
+    "faiss-gpu-cu12", "gradio", "gradio-pdf", "spacy"
 ]
 
 [project.optional-dependencies]
@@ -32,6 +31,9 @@ test = [
     "pytest",
     "pytest-repeat",
 ]
+
+[tool.setuptools]
+py-modules = ['enstrag']
 
 [tool.setuptools.dynamic]
 version = { attr = "enstrag.__version__" }
