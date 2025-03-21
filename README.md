@@ -22,3 +22,10 @@ For evaluation, add the dataset to the enstrag/metrics/evaluation_datasets folde
 ```bash
 python3 -m enstrag.metrics.chunks_evaluation
 ```
+
+## Dataset
+
+```python
+from datasets import load_dataset
+dataset = load_dataset('Maxenceleguery/enstrag_dataset')
+```

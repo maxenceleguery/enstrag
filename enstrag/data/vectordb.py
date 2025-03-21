@@ -33,7 +33,7 @@ class VectorDB(DB):
         )
         splits = text_splitter.split_documents(documents)
         """
-
+        self.embedding = embedding
         self.db = Chroma(
             embedding_function=embedding,
             persist_directory=persist_directory,

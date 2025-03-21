@@ -39,8 +39,25 @@ services:
     environment:
       - API_URL=http://rag-app:8000
       - PERSIST_PATH=/app/vector_db
-
     restart: unless-stopped
+
+  restarter:
+    image: docker:cli
+    depends_on:
+      - rag-app
+      - front
+    restart: unless-stopped
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        while true; do
+          if [ "$$(date +'%H:%M')" = '00:00' ]; then
+            docker restart rag-app
+            docker restart front
+          fi
+          sleep 60
+        done
 
 networks:
   my_network:

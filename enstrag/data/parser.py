@@ -4,9 +4,7 @@ from PyPDF2 import PdfReader
 import pymupdf
 import requests
 import os
-import pwd
 import re
-import shutil
 import json
 from langchain.docstore.document import Document
 from typing import List, Literal
@@ -62,9 +60,7 @@ class Parser:
     
     @staticmethod
     def clean_text(text):
-        # Conserve les caractères accentués et supprime les caractères non imprimables
         text = re.sub(r'[^\x20-\x7E\u00C0-\u00FF\u00B2\u00B3\u00B9\n]', '', text)
-        # Remplace les espaces multiples par un espace simple, tout en conservant les retours à la ligne
         text = re.sub(r'[^\S\n]+', ' ', text).strip()
         return text
 

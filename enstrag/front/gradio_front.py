@@ -2,15 +2,14 @@ import os
 import gradio as gr
 
 from .base_front import Front
-from .gradio_component import build_admin_panel, build_qa
+from .gradio_component import build_admin_panel, build_qa_panel
 
 class GradioFront(Front):
     def launch(self, share: bool = False, server_port: int = 7860) -> None:
+        rag = build_qa_panel(self.agent)
+        admin = build_admin_panel(self.agent)
 
-        rag = build_qa(self.agent)
-        admin_panel = build_admin_panel(self.agent)
-
-        demo = gr.TabbedInterface([rag, admin_panel], tab_names=["Enstrag Bot", "Admin panel"])
+        demo = gr.TabbedInterface([rag, admin], tab_names=["Enstrag Bot", "Admin panel"])
 
         demo.launch(
             share=share,
