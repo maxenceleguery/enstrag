@@ -122,9 +122,9 @@ class RagAgent:
         chunks_vectors = np.array(self.db.db.embeddings.embed_documents([chunk["text"] for chunk in chunks]))
         answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
 
-        # similarity_scores = np.dot(chunks_vectors, answer_vector) / (norm(chunks_vectors) * norm(answer_vector))
+        similarity_scores = np.dot(chunks_vectors, answer_vector) / (norm(chunks_vectors) * norm(answer_vector))
         # similarity_scores = -np.linalg.norm(chunks_vectors - answer_vector, axis=1)
-        similarity_scores = -np.sum(np.abs(chunks_vectors - answer_vector), axis=1)
+        # similarity_scores = -np.sum(np.abs(chunks_vectors - answer_vector), axis=1)
 
         best_chunk_id = np.argmax(similarity_scores)
         if os.environ.get("PERSIST_PATH") is None:

@@ -74,7 +74,6 @@ def evaluate_rag(agent, dataset, dataset_name, output_file):
 
             eval_result = eval_pipe(eval_prompt, return_full_text=True, max_new_tokens=2)
             score = int(re.findall(r'\d+', eval_result[0]['generated_text'].split("###Answer score (between 0 and 5):\n")[1])[0])
-            print("score", score)
 
             # Write the results to the CSV file
             writer.writerow([
@@ -82,7 +81,8 @@ def evaluate_rag(agent, dataset, dataset_name, output_file):
                 best_chunk_percentage,
                 chunk_percentages[0] if len(chunk_percentages) > 0 else 0,
                 chunk_percentages[1] if len(chunk_percentages) > 1 else 0,
-                chunk_percentages[2] if len(chunk_percentages) > 2 else 0
+                chunk_percentages[2] if len(chunk_percentages) > 2 else 0,
+                score
             ])
 
 if __name__ == "__main__":
@@ -128,12 +128,12 @@ if __name__ == "__main__":
     ]
 
     # Evaluate the RAG agent for each dataset and write results to a CSV file
-    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/test.csv'
+    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/results_with_score.csv'
 
     # Write the header once
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['Dataset', 'Best Chunk Percentage', 'Chunk 1 Percentage', 'Chunk 2 Percentage', 'Chunk 3 Percentage'])
+        writer.writerow(['Dataset', 'Best Chunk Percentage', 'Chunk 1 Percentage', 'Chunk 2 Percentage', 'Chunk 3 Percentage', 'Score'])
 
     for dataset_filepath in dataset_filepaths:
         dataset = load_dataset(dataset_filepath)
