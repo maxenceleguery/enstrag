@@ -80,7 +80,7 @@ class Parser:
         return " ".join(texts)
 
     @staticmethod
-    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> List[tuple[str, int]]:
+    def get_text_from_pdf(path_to_pdf: str, backend: Literal["PyPDF2", "pymupdf"] = "PyPDF2") -> str:
         if not os.path.exists(path_to_pdf):
             raise FileNotFoundError(f"File {path_to_pdf} does not exist")
         if not path_to_pdf.endswith(".pdf"):
@@ -89,22 +89,22 @@ class Parser:
         texts = []
         if backend == "PyPDF2":
             reader = PdfReader(path_to_pdf)
-            for page_number, page in enumerate(reader.pages, start=1):
+            for _, page in enumerate(reader.pages):
                 raw_text = page.extract_text()
                 if raw_text:
                     cleaned_text = Parser.clean_text(raw_text)
-                    texts.append((cleaned_text, page_number))
+                    texts.append(cleaned_text+"\n\n")
 
         elif backend == "pymupdf":
             doc = pymupdf.open(path_to_pdf)
-            for page_number, page in enumerate(doc, start=1):
+            for page in doc:
                 cleaned_text = Parser.clean_text(page.get_textpage().extractText())
-                texts.append((cleaned_text, page_number))
+                texts.append(cleaned_text+"\n\n")
 
         else:
             raise ValueError(f"Wrong pdf extraction backend. Got {backend} instead of 'PyPDF2' or 'pymupdf'")
 
-        return texts
+        return " ".join(texts)
 
     @staticmethod
     def download_pdf(url: str, name: str = None) -> str:

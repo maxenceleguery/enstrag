@@ -129,15 +129,18 @@ class RagAgent:
         chunks_vectors = np.array(self.db.db.embeddings.embed_documents([chunk["text"] for chunk in chunks]))
         answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
 
-        cosine_sim = np.dot(chunks_vectors, answer_vector) / (norm(chunks_vectors) * norm(answer_vector))
-        best_chunk_id = np.argmax(cosine_sim)
+        similarity_scores = np.dot(chunks_vectors, answer_vector) / (norm(chunks_vectors) * norm(answer_vector))
+        # similarity_scores = -np.linalg.norm(chunks_vectors - answer_vector, axis=1)
+        # similarity_scores = -np.sum(np.abs(chunks_vectors - answer_vector), axis=1)
+
+        best_chunk_id = np.argmax(similarity_scores)
         if os.environ.get("PERSIST_PATH") is None:
-            best_chunk = (chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], cosine_sim)
+            best_chunk = (chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], similarity_scores)
         else:
-            best_chunk = (chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], cosine_sim)
+            best_chunk = (chunks[best_chunk_id]["path"], chunks[best_chunk_id]["name"], chunks[best_chunk_id]["text"], similarity_scores)
 
         # Classify chunks based on cosine similarity
-        classified_chunks = [chunk["text"] for _, chunk in sorted(zip(cosine_sim, chunks), reverse=True)]
+        classified_chunks = [chunk["text"] for _, chunk in sorted(zip(similarity_scores, chunks), reverse=True)]
 
         return best_chunk[0], best_chunk[1], best_chunk[2], classified_chunks
 
