@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-RUN pip install --no-cache-dir gradio gradio_pdf pymupdf
+RUN pip install --no-cache-dir gradio gradio_pdf pymupdf python-dotenv
 
 COPY ./enstrag/front ./front
 EXPOSE 7861

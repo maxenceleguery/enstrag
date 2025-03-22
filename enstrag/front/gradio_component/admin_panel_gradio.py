@@ -6,6 +6,9 @@ import re
 from functools import partial
 from hashlib import sha256
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass
 class FileDocument:
@@ -14,7 +17,7 @@ class FileDocument:
     name: str
     label: str
 
-HASH_PASSWORD = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+HASH_PASSWORD = os.getenv("HASH_PASSWORD")
 
 def check_password(password: str):
     if sha256(password.encode('utf-8')).hexdigest() == HASH_PASSWORD:

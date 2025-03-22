@@ -33,14 +33,17 @@ if args.reset:
             FileDocument("https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf", None, "Organic Chemistry", "Chemistry"),
             #"https://arxiv.org/pdf/1706.03762",
             #"https://arxiv.org/pdf/2106.09685"
-        ])
-    )
-else:
-    db.add_documents(
-        Parser.get_documents_from_filedocs(
-            load_filedocs()
+        ],
+        get_pages_num=False
         )
     )
+
+db.add_documents(
+    Parser.get_documents_from_filedocs(
+        load_filedocs(),
+        get_pages_num=False
+    )
+)
 
 agent = RagAgent(
     pipe=get_pipeline(llm_folder),

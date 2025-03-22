@@ -136,17 +136,31 @@ class Parser:
         return text, pdf_path
 
     @staticmethod
-    def get_document_from_filedoc(filedoc: FileDocument) -> List[Document]:
-        if filedoc.local_path is None:
+    def get_document_from_filedoc(filedoc: FileDocument, get_pages_num: bool = True) -> List[Document] | Document:
+        if filedoc.local_path is None or not os.path.exists(filedoc.local_path):
             filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
         text_pages = Parser.get_text_from_pdf(filedoc.local_path)
         store_filedoc(filedoc)
         if not text_pages:
             return []
         
+        if not get_pages_num:
+            text = "\n\n".join(t for t, page in text_pages)
+
+            return Document(
+                page_content=text,
+                metadata={
+                    "hash": sha256(text.encode('utf-8')).hexdigest(),
+                    "name": str(filedoc.name),
+                    "label": str(filedoc.label),
+                    "url": str(filedoc.url),
+                    "path": str(filedoc.local_path),
+                    "page_number": "0"
+                }
+            )
+        
         documents = []
         for text, page_number in text_pages:
-            print('page_number', page_number)
             documents.append(Document(
                 page_content=text,
                 metadata={
@@ -161,9 +175,12 @@ class Parser:
         return documents
 
     @staticmethod
-    def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:
+    def get_documents_from_filedocs(filedocs: List[FileDocument], get_pages_num: bool = True) -> List[Document]:
         docs = []
         for filedoc in filedocs:
-            documents = Parser.get_document_from_filedoc(filedoc)
-            docs.extend(documents)
+            documents = Parser.get_document_from_filedoc(filedoc, get_pages_num)
+            if isinstance(documents, Document):
+                docs.append(documents)
+            else:
+                docs.extend(documents)
         return docs

@@ -1,5 +1,6 @@
 from typing import Dict, Any, List, Tuple, Literal
 import os
+from torch.cuda import empty_cache, memory_allocated
 import numpy as np
 from numpy.linalg import norm
 from langchain.prompts import ChatPromptTemplate
@@ -41,11 +42,16 @@ class RagAgent:
 
     def top_k_tokens(self, prompt: Dict[str, Any], k: int, method: Literal["gradient", "perturbation"] = "perturbation") -> List[str]:
         if method == "perturbation":
-            return self.pipeline_xrag_pert.top_k_tokens(prompt, k)
-        if method == "gradient":
-            return self.pipeline_xrag_grad.top_k_tokens(prompt, k)
+            tokens = self.pipeline_xrag_pert.top_k_tokens(prompt, k)
+        elif method == "gradient":
+            print(memory_allocated())
+            tokens = self.pipeline_xrag_grad.top_k_tokens(prompt, k)
+            print(memory_allocated())
+        else:
+            raise ValueError(f"Wrong method for explanation. Got {method}")
         
-        raise ValueError(f"Wrong method for explanation. Got {method}")
+        empty_cache()
+        return tokens
 
     def get_themes(self):
         docs = load_filedocs()
@@ -57,7 +63,7 @@ class RagAgent:
         if filedoc.local_path is None:
             filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
         store_filedoc(filedoc)
-        self.add_document(Parser.get_document_from_filedoc(filedoc))
+        self.add_document(Parser.get_document_from_filedoc(filedoc, get_pages_num=False))
 
     def get_docs(self):
         docs = load_filedocs()
