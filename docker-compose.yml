@@ -57,8 +57,8 @@ services:
       - |
         while true; do
           if [ "$$(date +'%H:%M')" = '00:00' ]; then
-            docker restart rag-app
             docker restart front
+            docker restart rag-app
           fi
           sleep 60
         done

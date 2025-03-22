@@ -37,12 +37,20 @@ def logout():
 def gradio_app():
     if 'CAS_USERNAME' not in session:
         return redirect(url_for('cas.login'))
-    
+
+    # Launch Gradio inside Flask
+    return run_gradio()
+
+def run_gradio():
     agent = AgentClient()
     front = GradioFront(agent)
 
     # Launch Gradio inside Flask
-    return front.launch(share=False, server_name="0.0.0.0", server_port=7861, inbrowser=False, prevent_thread_lock=True)
+    return front.launch(share=False, server_port=7861)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    if True:
+        run_gradio()
+
+    else:
+        app.run(debug=True, port=5000)
