@@ -12,5 +12,5 @@ def get_pipeline(model_name: str):
         device=0,
         max_length=2048,
         truncation=True,
-        batch_size=64
+        batch_size=64,
     )

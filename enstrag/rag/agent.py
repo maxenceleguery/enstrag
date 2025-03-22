@@ -112,6 +112,7 @@ class RagAgent:
         answer_vector = np.array(self.db.db.embeddings.embed_query(answer))
 
         cosine_sim = np.dot(chunks_vectors, answer_vector)/(norm(chunks_vectors)*norm(answer_vector))
+        print("Cosine_sim:", cosine_sim)
         best_chunk_id = np.argmax(cosine_sim)
         if os.environ.get("PERSIST_PATH") is None:
             return chunks[best_chunk_id]["url"], chunks[best_chunk_id]["name"]
@@ -180,11 +181,11 @@ class RagAgent:
         op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
         result = op.split("Answer:")[-1].strip()
 
-        if "\(" in result and "\)" in result:
-            result = result.replace("\(", "$").replace("\)", "$")
+        if r"\(" in result and r"\)" in result:
+            result = result.replace(r"\(", "$").replace(r"\)", "$")
 
-        if "\[" in result and "\]" in result:
-            result = result.replace("\[", "$$").replace("\]", "$$")
+        if r"\[" in result and r"\]" in result:
+            result = result.replace(r"\[", "$$").replace(r"\]", "$$")
 
         if verbose:
             print(f"\nYour question : {query}\n\n Predicted result: {result}")

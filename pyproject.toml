@@ -32,8 +32,8 @@ test = [
     "pytest-repeat",
 ]
 
-[tool.setuptools]
-py-modules = ['enstrag']
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.setuptools.dynamic]
 version = { attr = "enstrag.__version__" }
