@@ -128,7 +128,7 @@ if __name__ == "__main__":
     ]
 
     # Evaluate the RAG agent for each dataset and write results to a CSV file
-    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/results_with_score.csv'
+    output_file = '/home/ensta/ensta-joyeux/enstrag/enstrag/metrics/test.csv'
 
     # Write the header once
     with open(output_file, 'w', newline='') as csvfile:

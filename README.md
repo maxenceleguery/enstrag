@@ -18,9 +18,9 @@ conda activate <your env>
 python3 -m enstrag
 ```
 
-For evaluation, add the dataset to the enstrag/metrics/evaluation_datasets folder and go to enstrag folder :
+For evaluation :
 ```bash
-python3 -m enstrag.metrics.chunks_evaluation
+python3 -m enstrag.metrics.evaluation
 ```
 
 ## Dataset
