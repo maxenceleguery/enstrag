@@ -1,6 +1,6 @@
 services:
   rag-app:
-    #image: maxenceleguery/enstrag-server:latest
+    image: maxenceleguery/enstrag-server:latest
     build:
       dockerfile: ./Dockerfile
     
@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
 
   front:
-    #image: maxenceleguery/enstrag-front:latest
+    image: maxenceleguery/enstrag-front:latest
     build: 
       dockerfile: /home/student/enstrag/Dockerfilefront
     depends_on:
@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
 
   flask:
-    #image: maxenceleguery/enstrag-front:latest
+    image: maxenceleguery/enstrag-front:latest
     build: 
       dockerfile: /home/student/enstrag/Dockerfilefront
     command: ["python3", "front/flask_front.py"]
