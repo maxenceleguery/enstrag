@@ -24,7 +24,7 @@ def test_retrieval():
             FileDocument("https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf", "Organic Chemistry", "Chemistry"),
             #"https://arxiv.org/pdf/1706.03762",
             #"https://arxiv.org/pdf/2106.09685"
-        ])
+        ], get_pages_num=False)
     )
 
     chunks = db.get_context_from_query("What is a gaussian distribution ?")

@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     llm_folder = args.llm_folder
     embedding_folder = args.embedding_folder
-    persist_directory = args.persist_dir
+    persist_directory = "/tmp/enstrag_test"
 
     embedding = RagEmbedding(embedding_folder)
     db = VectorDB(embedding, persist_directory=persist_directory)

@@ -136,20 +136,30 @@ class Parser:
         return text, pdf_path
 
     @staticmethod
-    def get_document_from_filedoc(filedoc: FileDocument) -> Document:
-        if filedoc.local_path is None:
+    def get_document_from_filedoc(filedoc: FileDocument, get_pages_num: bool = True) -> List[Document] | Document:
+        if filedoc.local_path is None or not os.path.exists(filedoc.local_path):
             filedoc.local_path = Parser.download_pdf(filedoc.url, filedoc.name)
         text = Parser.get_text_from_pdf(filedoc.local_path)
-        store_filedoc(filedoc)
-        if text == "":
-             return None
-        return Document(page_content=text, metadata={"hash": sha256(text.encode('utf-8')).hexdigest(), "name": str(filedoc.name), "label": str(filedoc.label), "url": str(filedoc.url), "path": str(filedoc.local_path)})
+        store_filedoc(filedoc)    
+
+        return Document(
+            page_content=text,
+            metadata={
+                "hash": sha256(text.encode('utf-8')).hexdigest(),
+                "name": str(filedoc.name),
+                "label": str(filedoc.label),
+                "url": str(filedoc.url),
+                "path": str(filedoc.local_path),
+            }
+        )
 
     @staticmethod
-    def get_documents_from_filedocs(filedocs: List[FileDocument]) -> List[Document]:
+    def get_documents_from_filedocs(filedocs: List[FileDocument], get_pages_num: bool = True) -> List[Document]:
         docs = []
         for filedoc in filedocs:
-            doc = Parser.get_document_from_filedoc(filedoc)
-            if doc is not None:
-                docs.append(doc)
+            documents = Parser.get_document_from_filedoc(filedoc, get_pages_num)
+            if isinstance(documents, Document):
+                docs.append(documents)
+            else:
+                docs.extend(documents)
         return docs

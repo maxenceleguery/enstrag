@@ -28,7 +28,7 @@ def ask(agent, query):
     pdf, page_number = highlight_text_in_pdf(pdf_path, context_to_highlight)
     print(pdf)
     agent.last_context = retrieved_context
-    return result, sources + f" - Page {page_number}", PDF(pdf, label=pdf_name, starting_page=3, interactive=True)
+    return result, sources + f" - Page {page_number}", gr.update(value=pdf, label=pdf_name, starting_page=3)
 
 def clean_text(text):
     text = re.sub(r'[^\x20-\x7E\u00C0-\u00FF\u00B2\u00B3\u00B9\n]', '', text)

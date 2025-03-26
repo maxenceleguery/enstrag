@@ -7,6 +7,7 @@ from .perturber import Perturber
 from .generate import Generator
 from .compare import Comparator
 from typing import Any
+import gc
 from abc import abstractmethod
 
 class XRAGPipeline:
@@ -89,6 +90,16 @@ class GradientPipeline(XRAGPipeline):
         
         gradients = embeddings.grad
         average_gradients = gradients[0].mean(dim=1).detach().cpu().numpy()
+
+        for param in self.model.parameters():
+            if param.grad is not None:
+                param.grad = None
+
+        del gradients, embeddings
+        loss.detach()
+        del loss
+        gc.collect()
+        torch.cuda.empty_cache()
 
         tokens = self.tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
         scores = array(average_gradients)

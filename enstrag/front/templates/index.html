@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enstrag</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to ENSTRAG</h1>
+        <p>You need to log in with Cascad to access the application.</p>
+        <form action="{{ login_url }}" method="get">
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <p>ENSTA 2025 - Maxence Leguéry, Antoine Domingues, Albin Joyeux, Mattéo Denis, Simon Zarka</p>
+
+    <script type="text/javascript" src="script.js"></script>
+</body>
+</html>

@@ -21,7 +21,7 @@ docs = Parser.get_documents_from_filedocs([
     FileDocument("https://assets.openstax.org/oscms-prodcms/media/documents/OrganicChemistry-SAMPLE_9ADraVJ.pdf", "Organic Chemistry", "Chemistry"),
     #"https://arxiv.org/pdf/1706.03762",
     #"https://arxiv.org/pdf/2106.09685"
-])
+], get_pages_num=False)
 
 labels = list(set([doc.metadata["name"] for doc in docs]))
 c = []
