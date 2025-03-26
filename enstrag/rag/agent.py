@@ -146,7 +146,6 @@ class RagAgent:
         sources = list(set([chunk["name"] for chunk in chunks]))
 
         chunks = self._post_retrieval(chunks)
-        print("chunks", chunks)
 
         if verbose:
             print(f"\nContext from {sources} :\n{retrieved_context}\n")
@@ -190,3 +189,18 @@ class RagAgent:
             print(f"\nYour question : {query}\n\n Predicted result: {result}")
         
         return result, retrieved_context, ', '.join(list(sources)), self.get_best_chunks_by_sim_for_evaluation(chunks, result), chunks
+    
+    def answer_question_without_context(self, query: str) -> Tuple[str]:
+        query = self._pre_retrieval(query)
+
+        retrieved_context = ""
+        op = self.llm_chain.invoke({"context": retrieved_context, "question": query})
+        result = op.split("Answer:")[-1].strip()
+
+        if "\(" in result and "\)" in result:
+            result = result.replace("\(", "$").replace("\)", "$")
+
+        if "\[" in result and "\]" in result:
+            result = result.replace("\[", "$$").replace("\]", "$$")
+
+        return result

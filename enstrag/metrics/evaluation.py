@@ -85,6 +85,33 @@ def evaluate_rag(agent, dataset, dataset_name, output_file):
                 score
             ])
 
+def evaluate_without_rag(agent, dataset, dataset_name, output_file):
+    eval_pipe = get_pipeline("Ministral-8B-Instruct-2410")
+    with open(output_file, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+
+        for data in dataset:
+            question = data["Question"]
+            expected_answer = data["Answer"]
+            
+            generated_answer = agent.answer_question_without_context(question)[0]
+
+            # Benchmarking by a judge agent
+            eval_prompt = EVALUATION_PROMPT.format(
+                instruction=question,
+                response=generated_answer,
+                reference_answer=expected_answer,
+            )
+
+            eval_result = eval_pipe(eval_prompt, return_full_text=True, max_new_tokens=2)
+            score = int(re.findall(r'\d+', eval_result[0]['generated_text'].split("###Answer score (between 0 and 5):\n")[1])[0])
+
+            # Write the results to the CSV file
+            writer.writerow([
+                dataset_name,
+                score
+            ])
+
 if __name__ == "__main__":
     args = get_args()
     verify_execution()
@@ -134,6 +161,7 @@ if __name__ == "__main__":
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Dataset', 'Best Chunk Percentage', 'Chunk 1 Percentage', 'Chunk 2 Percentage', 'Chunk 3 Percentage', 'Score'])
+        # writer.writerow(['Dataset', 'Score'])
 
     for dataset_filepath in dataset_filepaths:
         dataset = load_dataset(dataset_filepath)
