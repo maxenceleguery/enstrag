@@ -33,7 +33,7 @@ services:
     depends_on:
       - rag-app
     ports:
-      - "7861:7861"
+      - "7860:7860"
     networks:
       - my_network
     volumes:
@@ -43,6 +43,36 @@ services:
       - PERSIST_PATH=/app/vector_db
       - PYTHONUNBUFFERED=1
       - HASH_PASSWORD=${HASH_PASSWORD}
+    restart: unless-stopped
+
+  flask:
+    #image: maxenceleguery/enstrag-front:latest
+    build: 
+      dockerfile: /home/student/enstrag/Dockerfilefront
+    command: ["python3", "front/flask_front.py"]
+    depends_on:
+      - rag-app
+      - front
+    ports:
+      - "5000:5000"
+    networks:
+      - my_network
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    depends_on:
+      - front
+      - flask
+    ports:
+      - "80:80"
+    networks:
+      - my_network
+    volumes:
+      - /home/student/enstrag/enstrag/front/nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
 
   restarter:
@@ -57,7 +87,6 @@ services:
       - |
         while true; do
           if [ "$$(date +'%H:%M')" = '00:00' ]; then
-            docker restart front
             docker restart rag-app
           fi
           sleep 60
